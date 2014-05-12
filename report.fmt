@@ -2,3 +2,6 @@
 
 %format .			= "\mbox{ }."
 %format Empty			= "\bot"
+%format	Type0			= "\mathcal{U}"
+%format Nat			= "\mathbb{N}"
+%format Natelim			= "\mathbb{N}\mbox{-}elim"

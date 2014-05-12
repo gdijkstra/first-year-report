@@ -29,7 +29,8 @@
 
 
 \newcommand{\withoutk}{\xspace\verb+--without-K+\xspace}
-\newcommand{\hott}{\xspace homotopy type theory\xspace}
+\newcommand{\hott}{homotopy type theory\xspace}
+\newcommand{\mltt}{Martin-L\"of's type theory\xspace}
 
 \title{First year report}
 
@@ -55,10 +56,168 @@ module report where
 
 dingen
 
-\chapter{Dependent pattern matching in \hott}
+\chapter{Dependent pattern matching}
 \label{ch:patmatch}
-Lipsum \citep{Coquand1992}.
 
+In functional programming languages such as Haskell, one defines
+functions on inductive types by using pattern matching. For example,
+we can define the Ackermann function as follows:
+
+\begin{code}
+  Ack 0      n      = S n
+  Ack (S m)  0      = Ack m (S 0)
+  Ack (S m)  (S n)  = Ack m (Ack (S m) n)
+\end{code}
+
+When defining functions on inductive types in \mltt, we only have the
+type its \emph{elimination principle} at our disposal. The
+(non-dependent) elimination principle for the natural numbers is the
+following:
+
+\begin{code}
+  Natelim : (Z : Type0) -> Z -> (Z -> Z) -> Nat -> Z
+\end{code}
+
+with computation rules
+
+\begin{code}
+  Natelim mz ms 0      = mz
+  Natelim mz ms (S n)  = ms (Natelim mz ms n)
+\end{code}
+
+The definition of |Ack| using |Natelim| looks as follows:
+
+\begin{code}
+  Ack : Nat -> Nat -> Nat
+  Ack = 
+    Natelim  (Nat -> Nat) 
+             (\ n -> S n)
+             (\ ackm -> Natelim  Nat 
+                                 (ackm (S Z)) 
+                                 (\ ackSmn -> ackm ackSmn))
+\end{code}
+
+which is less readable then our original definition. It would be nice
+if we added pattern matching to \mltt. However, we do need to be
+careful when we do this. We have to be sure that our pattern matching
+definitions are total. As it turns out, it is sufficient
+\citep{Coquand1992} to check that the patterns are \emph{covering} and
+that the recursive calls are done on \emph{structurally smaller}
+arguments.
+
+\todoi{Elaborate on this?}
+
+\section{Inductive families}
+
+In dependently-typed languages we can \emph{families} of inductive
+types indexed by some other type, so-called \emph{inductive
+  families}. We may want to define a family of list types, indexed by
+the length:
+
+\begin{code}
+  data Vec (A : Type0) : Nat -> Type0 where
+    nil   : Vec A 0
+    cons  : A -> (n : Nat) -> Vec A n -> Vec A (S n)
+\end{code}
+
+|Vec| is a family of types \emph{parametrised} by |A : Type0| and
+\emph{indexed} by |Nat|. Parameters are distinguished from indices in
+that they occur uniformly in the result type of every constructor. In
+the |Vec| example, the |A| occurs uniformly in both the result type of
+|nil| as well as |cons|, whereas the index of type |Nat| is |0| in the
+|nil| case and |S n| in the |cons| case.
+
+Indices are a useful way of encoding invariants in our data types. We
+can get a lot more information about a value we get just from its
+type. If we for example get a value |l : Vec A (S n)| for some |A :
+Type0| and |n : Nat|, we know that |l| cannot be |nil|, as that would
+not type check. This kind of information can also help us when we
+write functions on inductive families. Say we want to define the
+function |head| on vectors, a definition that only makes sense on
+non-empty vectors. We can specify this constraint in the type as
+follows: |head : (A : Type0) (n : Nat) -> Vec A (S n) -> A|. As
+mentioned before, we should only have to define what to do in the
+|cons| case, as the |nil| case is impossible. The form of pattern
+matching that takes into account the extra information one gets from
+the indices as they occur in the type signature of the function, is
+called \emph{dependent pattern matching}.
+
+With dependent pattern matching, we can write |head| as follows:
+
+\begin{code}
+  head : (A : Type0) (n : Nat) -> Vec A (S n) -> A
+  head A .(S n) (cons x n xs) = x
+\end{code}
+
+The dot in the pattern |.(S n)| indicates that there is no other
+possible well-typed pattern other than |S n| for that argument. The
+definition is also complete: the |nil| case is impossible as we have
+previously mentioned.
+
+\section{Uniqueness of identity proofs}
+
+One important example of an indexed family is the identity type:
+
+\begin{code}
+data Id (A : Type0) (x : A) : A -> Type0 where
+  refl : Id A x x
+\end{code}
+
+An inhabitant of |Id A x y| constitutes a proof that the terms |x| and
+|y| are equal. Note that |refl : Id A x y| only type checks if |x| and
+|y| are definitionally equal. To increase readability, we will
+sometimes denote |Id A x y| by |x == y|, leaving the type argument
+implicit.
+
+Given this definition of equality, it might lead one to think that if
+we have a proof |p : Id A x y|, it is necessarily unique. In fact,
+using dependent pattern matching, we can easily prove this:
+
+\begin{code}
+  uip : (A : Type0) (x y : A) (p : x == y) -> p == refl
+  uip A x .x refl = refl
+\end{code}
+
+Proving this using only the elimination principle of identity types
+turns out to be impossible: one can construct models of \mltt with
+identity types in which the uniquenes of identity proofs property does
+not hold for every type. In \hott people are specifically interested
+in the models that violate this principle, hence dependent pattern
+matching in its unrestricted form is incompatible with \hott. We hope
+to uncover what the root of this incompatibility is and whether we can
+find a variation of dependent pattern matching that is not at odds
+with \hott.
+
+\section{Parametrising inductive families}
+
+To get a better understanding of indexed familes and dependent pattern
+matching, we will translate some definitions to a non-indexed,
+parametrised family, using identity types. With identity types, one
+can factor out the ``indexedness'' of a family and make it more
+explicit what is going on when we try to eliminate out of such a
+family.
+
+For example, we can translate the vector type as follows:
+
+\begin{code}
+  data Vec' (A : Type0) (n : Nat) : Type0 where
+    nil   : n == 0 -> Vec A n
+    cons  : A -> (m : Nat) -> Vec A m -> n == S m -> Vec A n
+\end{code}
+
+If we now try to define |head| by pattern matching on |Vec' A (S n)|,
+we get the following:
+
+\begin{code}
+  head : (A : Type0) (n : Nat) -> Vec' A (S n) -> A
+  head A n (nil p) = ?
+  head A n (cons x m xs q) = x
+\end{code}
+
+The type of |p| is |S n == 0|, which is can be shown to be the empty
+type, so the |nil| case can be ignored. Note that we also have |q : n
+== S m|, corresponding to the dot pattern |.(S n)| in the previous
+definition of |head|.
 
 \chapter{Higher inductive types}
 \label{ch:hit}
