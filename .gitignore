@@ -1,0 +1,12 @@
+*.agdai
+report.aux
+report.bbl
+report.blg
+report.log
+report.pdf
+report.synctex.gz
+report.ptb
+report.tex
+report.bcf
+report.run.xml
+/report.toc

@@ -1,0 +1,70 @@
+\documentclass[a4paper,10pt]{report}
+
+%include report.fmt
+
+\newcommand{\todoi}[1]{\todo[inline]{#1}}
+
+\usepackage[activate={true,nocompatibility},final,tracking=true,kerning=true,spacing=true,factor=1100,stretch=10,shrink=10,protrusion=trues]{microtype}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[parfill]{parskip}
+\usepackage{amsmath,amsthm,amssymb,stmaryrd}
+\usepackage{todonotes}
+\usepackage{tgpagella}
+\usepackage{url}
+\usepackage{xspace}
+
+% Bibliography stuff
+\usepackage[autostyle]{csquotes}
+
+\usepackage[
+    backend=biber,
+    style=authoryear-icomp,
+    natbib=true,
+    url=false, 
+    doi=true,
+    eprint=false
+]{biblatex}
+\addbibresource{latex-base/refs.bib}
+
+
+\newcommand{\withoutk}{\xspace\verb+--without-K+\xspace}
+\newcommand{\hott}{\xspace homotopy type theory\xspace}
+
+\title{First year report}
+
+\author{Gabe Dijkstra}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+%if False
+\begin{code}
+module report where
+\end{code}
+%endif
+
+\tableofcontents
+
+\chapter*{Preface}
+\label{ch:preface}
+\addcontentsline{toc}{chapter}{Preface}
+
+dingen
+
+\chapter{Dependent pattern matching in \hott}
+\label{ch:patmatch}
+Lipsum \citep{Coquand1992}.
+
+
+\chapter{Higher inductive types}
+\label{ch:hit}
+foo
+
+\printbibliography
+
+\end{document}
+

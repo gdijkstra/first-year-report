@@ -1,0 +1,4 @@
+%include polycode.fmt
+
+%format .			= "\mbox{ }."
+%format Empty			= "\bot"

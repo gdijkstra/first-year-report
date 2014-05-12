@@ -1,0 +1,3 @@
+[submodule "latex-base"]
+	path = latex-base
+	url = git://github.com/gdijkstra/latex-base.git
