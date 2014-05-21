@@ -38,6 +38,8 @@
 \newcommand{\Hits}{Higher inductive types}
 \newcommand{\onehit}{$1$-HIT}
 \newcommand{\onehits}{$1$-HITs}
+\newcommand{\ie}{i.e.\xspace}
+
 \title{First year report}
 
 \author{Gabe Dijkstra}
@@ -400,9 +402,20 @@ and
 
 \todoi{Operational understanding of these operations.}
 
+Note that we are being a bit imprecise in the type of |drop|, the
+algebra passed to drop needs to be a \emph{monad} algebra, \ie the
+following must commute:
+
+\todoi{diagrams of monad algebra laws}
+
+\todoi{Some words about showing that it yields an isomorphism and that
+  we really need to apply the monad algebra laws.}
+
 \subsection{Construction of \onehits}
 
 \todoi{Describe construction}
+
+\todoi{Some implementation details, such as issues with computation rules}
 
 \printbibliography
 
