@@ -27,6 +27,15 @@
 ]{biblatex}
 \addbibresource{latex-base/refs.bib}
 
+\usepackage{tikz}
+\usetikzlibrary{decorations.pathmorphing} % for snake lines
+\usetikzlibrary{matrix}
+% TikZ styles for drawing
+
+\tikzstyle{snakeline} = [->, decorate, decoration={zigzag, pre length=0.1cm, post length=0.1cm, segment length=1.5mm, amplitude=.25mm}]
+\tikzstyle{snakelin} = [->, decoration={zigzag, pre length=0.1cm, post length=0.1cm, segment length=1.5mm, amplitude=.25mm}]
+\tikzset{node distance=2cm, auto}
+
 \newcommand{\withoutk}{\xspace\verb+--without-K+\xspace}
 \newcommand{\hott}{homotopy type theory\xspace}
 \newcommand{\Hott}{Homotopy type theory\xspace}
@@ -39,9 +48,9 @@
 \newcommand{\onehits}{$1$-HITs\xspace}
 \newcommand{\ie}{i.e.\xspace}
 
-\title{First year report}
+\title{Pattern matching in homotopy type theory}
 
-\author{Gabe Dijkstra}
+\author{First year report \\\\ Gabe Dijkstra}
 
 \date{\today}
 
@@ -61,7 +70,11 @@ module report where
 \label{ch:preface}
 \addcontentsline{toc}{chapter}{Preface}
 
-dingen
+dingen foo
+
+\chapter{Homotopy type theory}
+
+Short introduction to homotopy type theory.
 
 \chapter{Higher inductive types}
 \label{ch:hit}
@@ -103,43 +116,108 @@ also satisfy certain computation rules:
                           -> Circle-elim Z zb zloop base == zb
 \end{code}
 
-But we also want a computation rule on the path constructors:
+Apart from computation rules on points, we also need computation rules
+on paths, witnessing the fact that every function defined in type
+theory respects equality:
 
 \begin{code}
   Circle-elim-comp-path  : (Z : Type0) (zb : Z) (zloop : zb == zb)
                          -> ap (Circle-elim Z zb zloop) == zloop
 \end{code}
 
-\todoi{Dependent eliminator}
+...
 
 \section{Containers}
 
-One way to look at inductive types is as initial algebras of strictly
-positive functors.
+Before we can start formalising a notion of \hits, we need to know
+what ordinary inductive types are. One way to look at inductive types
+is as initial algebras of strictly positive functors. For example, the
+list data type can be seen as the initial algebra of the functor
+(having fixed some |A : Type0|) |ListFA X = 1 + A times X|. An algebra
+for this functor is a type |Z : Type0| along with a function |ListF Z
+-> Z|. An initial algebra |List : Type0| with |sup : ListF List ->
+List| then satisfies the following universal property for any algebra
+|theta : ListF Z -> Z| with |Z : Type0|:
 
-\todoi{Mention how negative functors can be problematic}
+\todoi{Make sure we get arrows in the diagram, there might be an
+  easier way to do this diagram.}
 
-One way to formalise the notion of strictly positive functors is as
-\emph{containers} \citep{Abbott2005}: a container is a pair |S :
-Type0|, the type of \emph{shapes}, and |P : S -> Type0|, the type of
-\emph{positions}, denoted |S lhd P|. The container then describes the
-functor |sem(S lhd P) X = (s : S) times (P s -> X)|, which is
-sometimes called the \emph{extension} of the container |S lhd P|. The
-action on morphisms of the extension can then be defined as follows:
+\begin{center}
+  \begin{tikzpicture}[description/.style={fill=white,inner sep=2pt}]
+    \matrix (m) [matrix of math nodes, 
+                row sep=4.5em,
+                column sep=3.5em,
+                text height=1.5ex,
+                text depth=0.25ex]
+ { |ListF List| & & |List| \\
+   |ListF Z|    & & |Z|    \\ };
+
+  \path (m-1-1) edge[decorate] node[auto]       {|sup|} (m-1-3);
+  \path (m-1-1) edge[decorate] node[auto,swap]  {|F (elim theta)|} (m-2-1);
+  \path (m-1-3) edge[decorate] node[auto]       {|elim theta|} (m-2-3);
+  \path (m-2-1) edge[decorate] node[auto]       {|theta|} (m-2-3);
+  \end{tikzpicture}
+\end{center}
+
+Unfolding the definition of |ListF| in the type of |sup| and applying
+the universal property of sums shows us that |sup| is exactly the
+familiar list constructors |nil| and |cons| combined. The existence of
+|elim theta| for any |theta| gives us the non-dependent elimination
+principle, which in this case, if we unfold the definition of |ListF|,
+gives, we see that this is the familiar |fold| operation on lists. The
+commutativity of the diagram gives us the computation rules for
+|elim|.
+
+Initiality also means that two algebras satisfying the universal
+property are isomorphic, so we can fix a candidate and talk about
+\emph{the} initial algebra of a strictly positive functor.
+
+The condition on functors that they need to be strictly positive is
+necessary: if we allow for recursion to happen in negative positions,
+we can write terms that do not normalise. We can encode the |omega|
+combinator from the untyped $\lambda$-calculus using the initial
+algebra of the functor |F X = X -> X|.
+
+\todoi{Show this example}
+
+The condition that functors may not have recursive occurrences in
+negative positions can be described as that the functor can be written
+as using the following grammar:
+
+\todoi{grammar from that one paper}
+
+Formalising this grammar has several problems. Dealing with binders is
+usually annoying as one has to use things such as de Bruijn
+indices. One also has the ``problem'' that there are multiple
+representations of the same functor: the constant functor can be
+described as |`1| or |`1 `+ `0|, etc.
+
+Another way to more succinctly formalise the notion of strictly
+positive functors is as \emph{containers} \citep{Abbott2005}: a
+container is a pair |S : Type0|, the type of \emph{shapes}, and |P : S
+-> Type0|, the type of \emph{positions}, denoted |S lhd P|. The
+container then describes the functor |sem(S lhd P) X = (s : S) times
+(P s -> X)|, which is sometimes called the \emph{extension} of the
+container |S lhd P|. The action on morphisms of the extension can then
+be defined as follows:
 
 \begin{code}
   map : {C : Cont} {A B : Type0} (f : A -> B) -> sem(C) A -> sem(C) B
   map f (s , u) := (s , \ i -> f (u i))
 \end{code}
 
+The pros \todo{need better word for this} of this approach are that it
+is easier to formalise in languages such as Agda and that if we have
+two containers such that the extensions are equal, then the components
+must be equal as well.
+
 \subsection{Initial algebra of a container}
 
-\todoi{Something about how we obviously need something more than just
-  functors.}
-
-Suppose |sup : sem(C) WC -> WC| is an initial algebra of the functor
-|sem(C)| for some container |C|, then we have that the following
-diagram commutes for any other algebra |theta : sem(C) Z -> Z|:
+Containers give us a nice description of strictly positive functors,
+but we are mainly interested in their initial algebras. Suppose |sup :
+sem(C) WC -> WC| is an initial algebra of the functor |sem(C)| for
+some container |C|, then we have that the following diagram commutes
+for any other algebra |theta : sem(C) Z -> Z|:
 
 \todoi{Diagram}
 
@@ -156,7 +234,35 @@ If we unfold the definition of |sem(C)| we get the following:
   u)) = theta (s, \ i -> elim theta (u i))|
 \end{itemize}
 
-which is the familiar \emph{W-type} construction from \todo{martin-lof citation}
+which is the familiar \emph{W-type} construction from \todo{martin-lof
+  citation}
+
+Using this we can define the natural numbers as the initial algebra of
+the following container:
+
+\begin{code}
+  S : Type0
+  S = 1 + 1
+
+  P : Type0
+  P (inl tt) = 0
+  P (inr tt) = 1
+\end{code}
+
+The |zero| and |succ| constructors can be defined as follows:
+
+\begin{code}
+  zero : WC
+  zero = sup (inl tt) exfalso
+
+  succ : WC -> WC
+  succ n = sup (inr tt) (\ x -> n)
+\end{code}
+
+\todoi{Note something about the lack of unicity of the
+  constructors. One needs to compare functions from an empty type into
+  some other type. Adding this functionality to the type theory
+  quickly makes the system undecidable.}
 
 \subsection{Natural transformations}
 
@@ -274,7 +380,7 @@ The point and path constructors are then as follows, if we call the
 type we are defining |H|:
 
 \begin{itemize}
-\item |c0 : sem(S0 lhd P0) -> H|
+\item |c0 : sem(S0 lhd P0) H -> H|
 \item |c1 : (s : S1) -> (P1 s -> H) -> inst v (l s) == inst v (r s)|
 \end{itemize}
 
@@ -466,6 +572,12 @@ The type of |p| is |S n == 0|, which is can be shown to be the empty
 type, so the |nil| case can be ignored. Note that we also have |q : n
 == S m|, corresponding to the dot pattern |.(S n)| in the previous
 definition of |head|.
+
+\todoi{Mention the Cockx paper and observations, work out how UIP becomes a problem}
+
+\todoi{Cockx' work is very syntactic. My goal is to give a more
+  semantic/internal account of pattern matching. Idea: create DSL for
+  inductive types along with what pattern matching should look like.}
 
 \printbibliography
 
