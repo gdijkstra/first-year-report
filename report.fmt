@@ -25,4 +25,5 @@
 %format P'			= "P^{*}"
 %format top			= "\top"
 %format bot			= "\bot"
-%format ||			= "||"
+%format //			= "||"
+%format trans			= "transFIXME"
