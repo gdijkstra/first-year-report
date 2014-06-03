@@ -36,4 +36,4 @@ $(PDF) : $(TEX) $(BIB)
           echo "Iterations: $$i"'
 
 clean :
-	rm -f *.aux *.log *.nav *.out *.ptb *.toc *.snm $(PDF) $(TEX) *.synctex.gz *.bbl *.blg
+	rm -f *.aux *.log *.nav *.out *.ptb *.toc *.snm $(PDF) $(TEX) *.synctex.gz *.bbl *.blg *.run.xml
