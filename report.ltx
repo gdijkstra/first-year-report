@@ -342,27 +342,28 @@ The |zero| and |succ| constructors can be defined as follows:
 \todoi{Note something about the lack of unicity of the
   constructors. One needs to compare functions from an empty type into
   some other type. Adding this functionality to the type theory
-  quickly makes the system undecidable.}
+  quickly makes the system undecidable. Check
+  \verb+http://mazzo.li/epilogue/index.html%3Fp=324.html+.}
 
 \subsection{Natural transformations}
 
 We can also easily characterise natural transformations between
-containers. Suppose |C| and |D| are containers, then a natural
-transformation |eta : sem(C) -> sem(D)| is a collection of morphisms
-|eta : (X : Type0) -> sem(C) X -> sem(D) X|, such that for any |f : X -> Y|
+containers. Suppose |C0| and |C1| are containers, then a natural
+transformation |eta : sem(C0) -> sem(C1)| is a collection of morphisms
+|eta : (X : Type0) -> sem(C0) X -> sem(C1) X|, such that for any |f : X -> Y|
 the following commutes:
 
 \begin{center}
   \begin{tikzpicture}
-    \node (CX)               {|sem(C) X|};
-    \node (CY) [below of=CX] {|sem(C) Y|};
-    \node (DX) [right of=CX] {|sem(D) X|};
-    \node (DY) [below of=DX] {|sem(D) Y|};
+    \node (C0X)               {|sem(C0) X|};
+    \node (C0Y) [below of=C0X] {|sem(C0) Y|};
+    \node (C1X) [right of=C0X] {|sem(C1) X|};
+    \node (C1Y) [below of=C1X] {|sem(C1) Y|};
     
-    \draw[->] (CX) to node[swap] {|map C f|} (CY);
-    \draw[->] (DX) to node {|map D f|} (DY);
-    \draw[->] (CX) to node {|eta X|} (DX);
-    \draw[->] (CY) to node {|eta Y|} (DY);
+    \draw[->] (C0X) to node[swap] {|map C0 f|} (C0Y);
+    \draw[->] (C1X) to node {|map C1 f|} (C1Y);
+    \draw[->] (C0X) to node {|eta X|} (C1X);
+    \draw[->] (C0Y) to node {|eta Y|} (C1Y);
   \end{tikzpicture}
 \end{center}
 
@@ -376,7 +377,7 @@ s|. Applying the natural transformation can then be done as follows:
   apply-nat  :   {X : Type0} {C D : Cont} 
                  (f : S0 -> S1)
                  (g : (s : S0) -> P1 (f s) -> P0 s) 
-             ->  sem(C) X -> sem(D) X
+             ->  sem(C0) X -> sem(C1) X
   apply-nat f g (s , u) := (f s , \i -> u (g (f s) i))
 \end{code}
 
@@ -528,9 +529,9 @@ the data needed for the \emph{path} constructors:
 
 \begin{itemize}
 \item |C0 : Cont| for the point constructors
-\item |S1 : Type0| the type of shapes of the path constructors with
-  |P1 : S1 -> Type0| giving the type of \emph{variables} for every
-  shape.
+\item |C1 : Cont| where the shapes |S1 : Type0| represent the shapes
+  of the path constructors. The positions |P1 : S1 -> Type0| give the
+  type of \emph{variables} for every shape.
 \item |l r : (s : S1) -> sem(C0 *) (P1 s)| describe the left and right
   hand side of the path constructors, where |sem(C0 *) (P1 s)| should
   be seen as terms constructed using |W C0| with free variables coming
@@ -568,7 +569,7 @@ This principle should satisfy the following computation rule on point
 constructors definitionally, given |m : sem(C0) H|:
 
 \begin{code}
-  elim Z theta rho (c0 m) = theta (map C0 (elim theta rho) m)
+  elim Z theta rho (c0 m) = theta (map C0 (elim Z theta rho) m)
 \end{code}
 
 Just as the above computation rule explains how to reduce the
@@ -620,16 +621,144 @@ then x else y) (\ ())|.
 
 \todoi{Show that the elimination principles just work out nicely.}
 
-\subsection{Implementation details}
-
-\todoi{Something about using |Free C X| vs. |sem(C *) X|. What are the
-  problems showing that these two are equivalent?}
-
 \subsection{Alternative construction}
 
-\todoi{Write about Paolo's more conceptual presentation.}
+An alternative, more conceptual presentation of \onehits, proposed by
+Paolo Capriotti, is as follows:
 
-\subsection{Closure}
+\begin{itemize}
+\item |C0 : Cont| for the point constructors
+\item |C1 : Cont| for the path constructors
+\item |left right : sem(C1) => sem(C0 *)| natural transformations
+  describing the result types of the path constructors.
+\end{itemize}
+
+The constructors of the type |H| that we are defining, are:
+
+\begin{itemize}
+\item |c0 : sem(C0) H -> H|
+\item |c1 : (x : sem(C1) H) -> lift c0 (left !! x) == lift c0 (right !! x)|
+\end{itemize}
+
+The description of the data looks similar to the previous approach,
+except that the constituents of the equations are given in a seemingly
+different form. However, providing a natural transformation |sem(C1)
+=> sem(C0 *)| boils down to giving a function |(s : S1) -> sem(C0 *)
+(P1 s)|: unfolding the definition of |sem(C0 *) (P1 s)| we get:
+
+\begin{code}
+  l : (s : S1) -> (s* : S0*) times (P0* -> P1 s)
+\end{code}
+
+which is the same as giving two functions:
+
+\begin{code}
+  l0 : S1 -> S0*
+  l1 : (s : S1) -> P0* (l0 s) -> P1 s
+\end{code}
+
+We now need to show that |lift c0 ((mk-nat l0 l1) !! (s , v)) == inst v
+(l s)| (and similarly for |r|):
+
+\begin{code}
+  lift c0 ((mk-nat l0 l1) !! (s , v)) ==
+  lift c0 (l0 s , \ i -> v (l1 (l0 s) i)) ==
+  lift c0 (map (C0 *) v (l0 s, l1 (l0 s)) ==
+  lift c0 (map (C0 *) v (l s)) ==
+  inst v (l s)
+\end{code}
+
+The elimination principle is given by, which is also equivalent to the previous principle:
+
+\begin{code}
+  elim  :  (Z : Type0)
+           (theta : sem(C0) Z -> Z)
+           (rho :  (x : sem(C1) Z) -> lift theta (left !! x) == lift theta (right !! x))
+        -> H -> Z
+\end{code}
+
+along with the computation rule for points:
+
+\begin{code}
+  elim Z theta rho (c0 m) = theta (map C0 (elim Z theta rho) m)
+\end{code}
+
+Of course, we still have the problem of defining our path computation rule as:
+
+\begin{code}
+  ap (elim Z theta rho) (c1 m) == rho (map C0 (elim Z theta rho) m)
+\end{code}
+
+However, with this representation it becomes a bit clearer what
+diagrams have to commute in order for this to work. We have:
+
+\begin{code}
+  ap (elim Z theta rho) (c1 m) : 
+    elim Z theta rho (lift c0 (left !! m)) == elim Z theta rho (lift c0 (right !! m))
+\end{code}
+
+versus
+
+\begin{code}
+  rho (map C0 (elim Z theta rho) m) :
+    lift theta (left !! map C0 (elim Z theta rho) m) == lift theta (right !! map C0 (elim Z theta rho) m) 
+\end{code}
+
+Asserting the equality to both left hand sides is the same as
+asserting the commutativity of the following diagram:
+
+\begin{center}
+  \begin{tikzpicture}[description/.style={fill=white,inner sep=2pt}]
+    \matrix (m) [matrix of math nodes, 
+                row sep=4.5em,
+                column sep=3.5em,
+                text height=1.5ex,
+                text depth=0.25ex]
+ { |sem(C1) H| & & |sem(C0*) H| & & H \\
+   |sem(C1) Z| & & |sem(C0*) Z| & & Z \\
+ };
+
+ \path[->] (m-1-1) edge[decorate] node[auto] {|left H|} (m-1-3);
+ \path[->] (m-1-3) edge[decorate] node[auto] {|lift c0|} (m-1-5);
+ \path[->] (m-1-1) edge[decorate] node[auto, swap] {|map C0 (elim theta rho)|} (m-2-1);
+ \path[->] (m-1-5) edge[decorate] node[auto] {|elim theta rho|} (m-2-5);
+ \path[->] (m-2-1) edge[decorate] node[auto, swap] {|left Z|} (m-2-3);
+ \path[->] (m-2-3) edge[decorate] node[auto, swap] {|lift theta|} (m-2-5);
+  \end{tikzpicture}
+\end{center}
+
+We can fill in the diagram by adding an arrow |sem(C0 *) H -> sem(C0
+*) Z|, namely |map (C0 *) (elim theta rho)|:
+
+\begin{center}
+  \begin{tikzpicture}[description/.style={fill=white,inner sep=2pt}]
+    \matrix (m) [matrix of math nodes, 
+                row sep=4.5em,
+                column sep=3.5em,
+                text height=1.5ex,
+                text depth=0.25ex]
+ { |sem(C1) H| & & |sem(C0*) H| & & H \\
+   |sem(C1) Z| & & |sem(C0*) Z| & & Z \\
+ };
+
+ \path[->] (m-1-1) edge[decorate] node[auto] {|left H|} (m-1-3);
+ \path[->] (m-1-3) edge[decorate] node[auto] {|lift c0|} (m-1-5);
+ \path[->] (m-1-1) edge[decorate] node[auto, swap] {|map C0 (elim theta rho)|} (m-2-1);
+ \path[->] (m-1-3) edge[decorate] node[auto, swap] {|map (C0*) (elim theta rho)|} (m-2-3);
+ \path[->] (m-1-5) edge[decorate] node[auto] {|elim theta rho|} (m-2-5);
+ \path[->] (m-2-1) edge[decorate] node[auto, swap] {|left Z|} (m-2-3);
+ \path[->] (m-2-3) edge[decorate] node[auto, swap] {|lift theta|} (m-2-5);
+  \end{tikzpicture}
+\end{center}
+
+The resulting square on the left holds by naturality. The square on
+the right is the statement that |elim theta rho| is an algebra
+homomorphism from |lift c0| to |lift theta|. This can be proven.
+
+\todoi{Something on the technicalities: |Free C0 X| vs. |sem(C0 *)
+  X|?}
+
+\subsection{Closure properties}
 
 We cannot define things like:
 
@@ -645,6 +774,12 @@ We cannot define things like:
 
 \todoi{Something about equations appearing in arguments of path
   constructors or whatever.}
+
+\subsection{Constructing $2$-HITs}
+
+Goal: formalise the hub-and-spokes construction: take a code for a
+$2$-HIT and produce a code of $1$-HIT along with a proof that the
+interpretation of both codes yield equivalent types.
 
 \chapter{Dependent pattern matching}
 \label{ch:patmatch}
