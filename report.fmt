@@ -12,6 +12,7 @@
 %format rho			= "\rho"
 %format theta			= "\theta"
 %format eta			= "\eta"
+%format mu			= "\mu"
 %format times			= "\times"
 %format ==			= "="
 %format :=			= ":\equiv "
