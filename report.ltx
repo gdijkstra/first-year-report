@@ -82,6 +82,10 @@ dingen foo
 
 Short introduction to homotopy type theory.
 
+\todoi{Introduce equality types with |ap|, |apd|, |p [x down y]|}
+
+\todoi{Introduce curly braces notation}
+
 \chapter{Higher inductive types}
 \label{ch:hit}
 
@@ -132,6 +136,8 @@ theory respects equality:
   Circle-elim-comp-path  : (Z : Type0) (zb : Z) (zloop : zb == zb)
                          -> ap (Circle-elim Z zb zloop) == zloop
 \end{code}
+
+A dependent version of the eliminator can also 
 
 \todoi{Circle-elim-dep, without computation rules on points, but with
   the one on paths: in fact one only has to changed |ap| to
@@ -839,7 +845,7 @@ We cannot define things like:
 \todoi{Something about equations appearing in arguments of path
   constructors or whatever.}
 
-\subsection{Constructing $2$-HITs}
+\section{Constructing $2$-HITs}
 
 \todoi{ In theory having only \onehits should be enough, since we have
   some sort of way to translate any higher definition to the lower
