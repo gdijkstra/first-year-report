@@ -104,6 +104,8 @@ something of type |B y|, while having a proof of |x eqA y|. Using
 |B y|, so we can compare the two. The notation for |transport A B x y
 p u == v| is |u == v [B down p]|.
 
+\todoi{Introduce curly braces notation}
+
 \chapter{Higher inductive types}
 \label{ch:hit}
 
@@ -155,6 +157,7 @@ theory respects equality:
                          -> ap (Circle-elim Z zb zloop) == zloop
 \end{code}
 
+<<<<<<< HEAD
 The above rules show us that when we want to define a function |f :
 Circle -> Z|, we have to say what |f base| and |ap f loop| should be.
 
@@ -168,6 +171,13 @@ which is as one would expect:
 
 The computation rule for points is the same and the rule for paths is
 almost the same: we only have to replace |ap| with |apd|.
+=======
+A dependent version of the eliminator can also 
+
+\todoi{Circle-elim-dep, without computation rules on points, but with
+  the one on paths: in fact one only has to changed |ap| to
+  |apd|. Mention this, don't show everything.}
+>>>>>>> FETCH_HEAD
 
 \subsection{Propositional truncation}
 
@@ -917,7 +927,7 @@ We cannot define things like:
 \todoi{Something about equations appearing in arguments of path
   constructors or whatever.}
 
-\subsection{Constructing $2$-HITs}
+\section{Constructing $2$-HITs}
 
 \todoi{ In theory having only \onehits should be enough, since we have
   some sort of way to translate any higher definition to the lower
