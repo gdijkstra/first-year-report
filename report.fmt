@@ -35,4 +35,5 @@
 %format trunc0			= "\mbox{trunc}_{0}"
 %format truncend0         	= "]_{0}"
 %format trans			= "\ct"
+%format trans'			= "trans"
 %format down			= "\downarrow"

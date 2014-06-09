@@ -53,6 +53,9 @@
 \newcommand{\twoconstructor}{$2$-constructor\xspace}
 \newcommand{\twoconstructors}{$2$-constructors\xspace}
 \newcommand{\ie}{i.e.\xspace}
+\newcommand{\eg}{e.g.\xspace}
+
+ \newenvironment{researchdir}{\textbf{Research direction}:\xspace}{}
 
 % Path composition from The Book.
 \newcommand{\ct}{%
@@ -157,7 +160,6 @@ theory respects equality:
                          -> ap (Circle-elim Z zb zloop) == zloop
 \end{code}
 
-<<<<<<< HEAD
 The above rules show us that when we want to define a function |f :
 Circle -> Z|, we have to say what |f base| and |ap f loop| should be.
 
@@ -171,23 +173,16 @@ which is as one would expect:
 
 The computation rule for points is the same and the rule for paths is
 almost the same: we only have to replace |ap| with |apd|.
-=======
-A dependent version of the eliminator can also 
-
-\todoi{Circle-elim-dep, without computation rules on points, but with
-  the one on paths: in fact one only has to changed |ap| to
-  |apd|. Mention this, don't show everything.}
->>>>>>> FETCH_HEAD
 
 \subsection{Propositional truncation}
 
 Apart from having path constructors between point constructors, one
-can also have \emph{variables} of the type being defined in left or
-right hand sides of the equations. An example of this is propositional
-truncation, or $(-1)$-truncation: the operation that creates a version
-of a given type such that it is a \emph{proposition}: every two
-elements are regarded as equal. Given |A : Type0|, the propositional
-truncation of |A|, called |// A //| is defined by:
+can also have \emph{variables} in the left or right hand sides of the
+equations. An example of this is propositional truncation, or
+$(-1)$-truncation: the operation that creates a version of a given
+type such that it is a \emph{proposition}: every two elements are
+regarded as equal. Given |A : Type0|, the propositional truncation of
+|A|, called |// A //| is defined by:
 
 \begin{itemize}
 \item a point constructor |[ _ ] : A -> // A //|
@@ -252,7 +247,7 @@ making it a set. If we want to eliminate into |Z|, we need to make
 sure that |Z| is a set:
 
 \begin{code}
-  // A ///-elim  :   (Z : Type0) 
+  // A /// -elim  :   (Z : Type0) 
                       (f : A -> Z)
                       (trunc : (x y : Z) -> (p : x == y) -> p == refl)
                   ->  // A /// -> Z
@@ -358,17 +353,13 @@ constructor being |Lam : Term -> Term|.
   Omega = omega (Lam omega)
 \end{code}
 
-The condition that functors may not have recursive occurrences in
-negative positions can be described as that the functor can be written
-as using the following grammar:
-
-\todoi{grammar from that one paper}
-
-Formalising this grammar has several problems. Dealing with binders is
-usually annoying as one has to use things such as de Bruijn
-indices. One also has the ``problem'' that there are multiple
-representations of the same functor: the constant functor can be
-described as |`1| or |`1 `+ `0|, etc.
+One can formalise the grammar of types in which there are no recursive
+occurrences in negative positions, as is done
+in~\cite{Morris2007}. Formalising this grammar has several
+problems. Dealing with binders is usually rather involved as one has
+to use things such as de Bruijn indices. More importantly, one has the
+problem that there are multiple representations of the same type, \eg
+the unit type can be described as |`1| or |`1 `+ `0|, etc.
 
 Another way to more succinctly formalise the notion of strictly
 positive functors is as \emph{containers} \citep{Abbott2005}: a
@@ -376,18 +367,26 @@ container is a pair |S : Type0|, the type of \emph{shapes}, and |P : S
 -> Type0|, the type of \emph{positions}, denoted |S lhd P|. The
 container then describes the functor |sem(S lhd P) X = (s : S) times
 (P s -> X)|, which is called the \emph{extension} of the container |S
-lhd P|. \todoi{Show that it is a functor: functor laws hold
-  definitionally, assuming eta laws for products?}
+lhd P|. The extension operator gives us something of type |Type0 ->
+Type0|, given a |Cont|, however we still need to show that this is a
+functor. The action on morphisms of a container can be defined as
+follows:
 
 \begin{code}
   map : {C : Cont} {A B : Type0} (f : A -> B) -> sem(C) A -> sem(C) B
   map f (s , u) := (s , \ i -> f (u i))
 \end{code}
 
-The pros \todo{need better word for this} of this approach are that it
-is easier to formalise in languages such as Agda and that if we have
-two containers such that the extensions are equal, then the components
-must be equal as well.
+One can then easily show that |sem(C)| is indeed a functor with |map|
+as its action on morphisms.
+
+The benefits of containers are that they are easy to formalise in
+languages such as Agda. Describing things as the action on morphisms
+and natural transformations between containers can be done in a
+succinct manner. Containers also have the property that if the
+extensions of two containers are equal, then the components of the
+containers must be equal as well, so we do not have the problem of the
+more syntactic appraoch as mentioned above.
 
 \subsection{Initial algebra of a container}
 
@@ -411,7 +410,6 @@ algebra |theta : sem(C) Z -> Z|:
   \end{tikzpicture}
 \end{center}
 
-
 If we unfold the definition of |sem(C)| we get the following:
 
 \begin{itemize}
@@ -425,8 +423,7 @@ If we unfold the definition of |sem(C)| we get the following:
   u)) = theta (s, \ i -> elim theta (u i))|
 \end{itemize}
 
-which is the familiar \emph{W-type} construction from \todo{martin-lof
-  citation}
+which is the \emph{W-type} construction from~\cite{MartinLof1984}.
 
 Using this we can define the natural numbers as the initial algebra of
 the following container:
@@ -450,11 +447,24 @@ The |zero| and |succ| constructors can be defined as follows:
   succ n := sup (inr tt) (\ x -> n)
 \end{code}
 
-\todoi{Note something about the lack of unicity of the
-  constructors. One needs to compare functions from an empty type into
-  some other type. Adding this functionality to the type theory
-  quickly makes the system undecidable. Check
-  \verb+http://mazzo.li/epilogue/index.html%3Fp=324.html+.}
+One downside of the above approach is that the constructors of a type
+are not unique up to definitional equality, \eg we can define
+
+\begin{code}
+  zero' : WC -> WC
+  zero' x := sup (inl tt) (\ _ -> x)
+\end{code}
+
+For every |x y : Nat|, we have that |zero' x == zero' y|
+propositionally but not definitionally. This can lead to situations
+where certain terms do not have the type we want it to, as we will see
+in section~\ref{sec:circle}. Ideally, the type checker identifies closed terms
+that are equal by function extensionality (such as the terms |\ _ ->
+zero| and |\ _ -> succ zero| of type |0 -> WC|), but this has as side
+effect that any two terms become definitionally equal under a false
+hypothesis, as is described in~\cite{McBride2010ii}. In such a system,
+reducing open terms can go wrong.
+
 
 \subsection{Natural transformations}
 
@@ -539,17 +549,17 @@ that these follow the monad laws. Before we can define the monad laws,
 we need to show that |Free C| is a functor for every |C :
 Cont|. Instead of defining a new |map| function for this data type and
 showing that it satisfies the functor laws, we can instead create a
-container out of this. We know that |sem(S lhd P) top = (s : S) times
-P s -> top == S|. Using this fact, given a container |S lhd P|, we can
+container out of this. We know that |sem(S lhd P) 1 = (s : S) times
+P s -> 1 == S|. Using this fact, given a container |S lhd P|, we can
 produce a new container, where |P*| is defined by structural
 recursion:
 
 \begin{code}
     S' : Type0
-    S' := Free C top
+    S' := Free C 1
 
     P' : S' -> Type0
-    P' (ret tt)        := top
+    P' (ret tt)        := 1
     P' (roll (s , u))  := (i : P s) times P' (u i)
 \end{code}
 
@@ -560,8 +570,16 @@ need to make sure that this operation indeed gives us what we want:
 for every |C : Cont| and |X : Type0|, |Free C X == sem(C *) X| must
 hold.
 
-\todoi{Talk about the functions that go in both directions.}
+The function from |sem(C *) X| to |Free C X| can be defined by
+structural recursion on the shapes:
 
+\begin{code}
+  star-free : {C : Cont} {X : Type0} -> sem(C *) X -> Free C X
+  star-free (ret tt        , m) = ret (m tt) 
+  star-free (roll (s , u)  , m) = roll (s , \ i -> star-free (u i , \ j -> m (i , j)))
+\end{code}
+
+Going in the other direction is a bit more involved.
 
 \subsubsection{Algebras for a free monad}
 
@@ -580,10 +598,9 @@ and
   forget : {C : Cont} {Z : Type0} -> (theta : sem(C *) Z -> Z) -> sem(C) Z -> Z
 \end{code}
 
-\todoi{Operational understanding of these operations.}
-
 Note that we are being a bit imprecise in the type of |forget|, the
-algebra |theta| passed to |forget| needs to be a \emph{monad} algebra, \ie the
+algebra |theta| passed to |forget| needs to be a \emph{monad} algebra,
+\ie it must respect the |join| operation, which means that the
 following must commute:
 
 \begin{center}
@@ -603,6 +620,9 @@ following must commute:
   \end{tikzpicture}
 \end{center}
 
+The algebra |theta| must also respect the |return| operation, \ie the
+following commutes:
+
 \begin{center}
   \begin{tikzpicture}
     \node (X) {|X|};
@@ -619,16 +639,16 @@ One can easily show that |forget (lift theta) x == theta x| for any
 |theta : sem (C) X -> X| and |x : sem( C *) X| by case distinction and
 $\beta$-reduction. Showing that |lift (forget theta) x == theta x| for
 |theta : sem (C *) X -> X| and |x : sem(C) X| is a bit more involved
-and needs to use the fact that |theta| is a monad algebra. \todo{Maybe
-  say what we actually have to do for equivalence of categories: this
-  is only the object part of the functors}
+and needs to use the fact that |theta| is a monad algebra. The
+functions |lift| and |forget| give the object part of the functors
+that witness the equivalence of the categories.
 
 As we have previously mentioned, the free monad of a functor can be
 seen as the type of terms of the initial algebra of the same functor,
-but with free variables of the given type. We have an instantiation
-operation |inst| that takes a substitution |v : X -> W C| and a term
-with free variables |x : sem(C *) X| and produces a |W C| by the
-following composition:
+but possibly with free variables. We have an instantiation operation
+|inst| that takes a substitution |v : X -> W C| and a term with free
+variables |x : sem(C *) X| and produces a |W C| by the following
+composition:
 
 \begin{center}
   \begin{tikzpicture}
@@ -679,11 +699,12 @@ type we are defining |H|:
 \item |sup1 : (s : S1) -> (v : P1 s -> H) -> inst v (l s) == inst v (r s)|
 \end{itemize}
 
-\todoi{Note that the version of |inst| here is a bit different:
-  instead of doing |lift sup|, we do |lift sup0|}
+The version of |inst| that we need here is a bit different from the
+one we have defined previously: instead of doing |lift sup|, we now do
+|lift sup0|. Apart from this, the behaviour is essentially the same.
 
-The argument of type |P1 s -> H| of the path constructor can be read
-as the assignment of the free variables.
+The argument of type |P1 s -> H| of the path constructor |sup1| can be
+interpreted as being the assignment of the free variables.
 
 To eliminate out of a \onehit, we need to say what one needs to be
 done with the point constructors and show that this is done in a way
@@ -727,12 +748,13 @@ type |lift theta (C0 *) (\ x -> elim Z theta rho (v x)) (l s) == lift
 theta (map (C0 *) (\ x -> elim Z theta rho (v x)) (r s))|.
 
 This problem can be solved, but with this presentation it is difficult
-to see what is actually happening, so the solution is postponed until
-\todo{ref}.
+to see what is actually going ``wrong'' with the types, hence the
+discussion of this is postponed until section~\ref{sec:altern-constr}.
 
 \subsection{Examples}
 
 \subsubsection{Circle}
+\label{sec:circle}
 
 As mentioned previously, the circle can be inductively defined as a
 type with one point constructor (|base|) and one path constructor
@@ -759,7 +781,9 @@ type:
   loop := sup1 tt exfalso
 \end{code}
 
-However, this does not type check.
+However, this does not type check as |sup1 tt exfalso| has type |inst
+exfalso (gen base) == inst exfalso (gen base)|. We can prove that
+|inst exfalso (gen base) == base|.
 
 \subsubsection{Propositional truncation}
 
@@ -767,13 +791,14 @@ Propositional truncation of a type |A : Type0| is given by one point
 constructor |A -> // A //| and one path constructor |(x y : // A //)
 -> x == y|. This means that |C0 := A lhd (\ s -> 0)| and |S1 := 1|
 with |P1 x := Bool|. The truncation equation is given by |l x := sup
-(inl true) exfalso| and |r x := sup (inl false)|. From this data we can
-define |[ x ] := sup0 x exfalso| and |trunc x y := sup1 tt (\ b -> if b
-then x else y) exfalso|.
-
-\todoi{Show that the elimination principles just work out nicely.}
+(inl true) exfalso| and |r x := sup (inl false)|. From this data we
+can define |[ x ] := sup0 x exfalso| and |trunc x y := sup1 tt (\ b ->
+if b then x else y) exfalso|. Note that in this case |trunc : (x y :
+// A //) -> x == y| does give us the right type straight away, as both
+sides of the equation consist of a single variable.
 
 \subsection{Alternative construction}
+\label{sec:altern-constr}
 
 An alternative, more conceptual presentation of \onehits, proposed by
 Paolo Capriotti, is as follows:
@@ -813,10 +838,10 @@ We now need to show that |lift sup0 ((mk-nat l0 l1) !! (s , v)) == inst v
 (l s)| (and similarly for |r|):
 
 \begin{code}
-  lift sup0 ((mk-nat l0 l1) !! (s , v)) ==
-  lift sup0 (l0 s , \ i -> v (l1 (l0 s) i)) ==
-  lift sup0 (map (C0 *) v (l0 s, l1 (l0 s)) ==
-  lift sup0 (map (C0 *) v (l s)) ==
+  lift sup0 ((mk-nat l0 l1) !! (s , v))      ==
+  lift sup0 (l0 s , \ i -> v (l1 (l0 s) i))  ==
+  lift sup0 (map (C0 *) v (l0 s, l1 (l0 s))  ==
+  lift sup0 (map (C0 *) v (l s))             ==
   inst v (l s)
 \end{code}
 
@@ -905,41 +930,105 @@ We can fill in the diagram by adding an arrow |sem(C0 *) H -> sem(C0
 
 The resulting square on the left holds by naturality. The square on
 the right is the statement that |elim theta rho| is an algebra
-homomorphism from |lift sup0| to |lift theta|. This can be proven.
+homomorphism from |lift sup0| to |lift theta|. We can prove this if we
+substitute |sem(C0 *) H| and |sem(C0 *) Z| with |Free C H| and |Free C
+X| respectively. After this substitution, the commutativity can be
+shown to hold by induction on |Free C H|.
 
-\todoi{Something on the technicalities: |Free C0 X| vs. |sem(C0 *)
-  X|?}
+\subsection{Limitations of the construction}
 
-\subsection{Closure properties}
+With ordinary strictly positive types, we can define types such as
+rose trees: given a type |A : Type0|, we have:
 
-We cannot define things like:
+\begin{itemize}
+\item |node : A -> List (RoseTree A) -> RoseTree A|
+\end{itemize}
 
-\begin{code}
-  data A : Type0 where
-    c : // A // -> A
-\end{code}
+It is perfectly okay to put apply a recursive occurrence to a strictly
+positive functor. The same, however, cannot be done with our \onehit
+construction, \eg we cannot define the type |A| given by the point constructor:
 
-\todoi{Something about why}
+\begin{itemize}
+\item |c : // A // -> A|
+\end{itemize}
 
-\todoi{Compare with strictly-positive functors: those just
-  compose/nest/whatever.}
+For this to work we would need to find a |S : Type0| and a |P : S ->
+Type0| such that for every |X : Type0| we have |(s : S) times P s -> X
+= // X //|, which does not seem to be the case.
 
-\todoi{Something about equations appearing in arguments of path
-  constructors or whatever.}
+\begin{researchdir}
+  Find out how we can change our construction such that we can define
+  types such as the above example.
+\end{researchdir}
 
 \section{Constructing $2$-HITs}
 
-\todoi{ In theory having only \onehits should be enough, since we have
-  some sort of way to translate any higher definition to the lower
-  one. But we still need some syntax for the higher ones, to be able
-  to do the translation at all.}
+In theory having only \onehits should be enough, since we have some
+sort of way to translate any higher definition to the lower one: the
+hub-and-spokes construction. In order to make this construction
+precise, we still need a formal way to talk about $n$-HITs in general.
 
-\todoi{Goal: formalise the hub-and-spokes construction: take a code
-  for a $2$-HIT and produce a code of $1$-HIT along with a proof that
-  the interpretation of both codes yield equivalent types.}
+A start would be to find a way to define $2$-HITs along with a
+function that, given a definition of a $2$-HIT, produces a definition
+of a \onehit, along with a proof that the interpretations of both
+definitions are equal.
 
-\todoi{Note that one needs the notion of a free groupoid, which can be
-  formalised using indexed \onehits as follows: explanation.}
+To be able to define $2$-constructors, we need to be able to talk
+about paths between paths between points. To be able to do this we
+need the free groupoid operation on relations: given a type |X :
+Type0| and a relation on |R : X -> X -> Type0|, we can define the
+indexed \onehit |FreeGroupoid : X -> X -> Type0| as follows:
+
+\begin{itemize}
+\item |return : (x y : G) -> R x y -> FreeGroupoid x y|
+\item |trans' : {x y z : G} -> FreeGroupoid x y -> FreeGroupoid y z -> FreeGroupoid x z|
+\item |sym : {x y : G} -> FreeGroupoid x y -> FreeGroupoid y x|
+\item |refl : {x : G} -> FreeGroupoid x x|
+\end{itemize}
+
+In order for |FreeGroupoid| to be a groupoid, we need the following
+path constructors:
+
+\begin{itemize}
+\item
+  \begin{code}
+  assoc  :   {x y z w : G}
+             (p : FreeGroupoid x y)
+             (q : FreeGroupoid y z)
+             (r : FreeGroupoid z w)
+         ->  trans' (trans' p q) r == trans' p (trans' q r)
+  \end{code}
+\item
+  \begin{code}
+  refl-unit-l  :   {x y : G}
+                   (p : FreeGroupoid x y)
+               ->  trans' refl p == p
+  \end{code}
+\item
+  \begin{code}
+  refl-unit-r  :   {x y : G}
+                   (p : FreeGroupoid x y)
+               ->  trans' p refl == p
+  \end{code}
+\item
+  \begin{code}
+  sym-refl  :   {x y : G}
+                (p : FreeGroupoid x y)
+            ->  sym (sym p) == p
+  \end{code}
+\end{itemize}
+
+\begin{researchdir}
+  Find a way to formalise indexed \onehits, such as the |FreeGroupoid|
+  example above.
+\end{researchdir}
+
+\begin{researchdir}
+  Find a way to define $2$-HITs, along with a formalisation of the
+  hub-and-spokes translation from $2$-HITs to \onehits, together with
+  a proof of its correctness.
+\end{researchdir}
+
 
 \chapter{Dependent pattern matching}
 \label{ch:patmatch}
@@ -1144,9 +1233,10 @@ Using |noo| we can now define an inhabitant of |0| as follows:
   bad = noo (0 -> Box) pf exfalso
 \end{code}
 
-\todoi{Some more on why this is evil and where the problem should
-  be. Is there an error in Conor's work? Is there an assumption that
-  we have missed?}
+\begin{researchdir}
+  \todoi{Find out why this is evil.}
+\end{researchdir}
+
 
 \printbibliography
 
