@@ -54,6 +54,14 @@
 \newcommand{\twoconstructors}{$2$-constructors\xspace}
 \newcommand{\ie}{i.e.\xspace}
 
+% Path composition from The Book.
+\newcommand{\ct}{%
+  \mathchoice{\mathbin{\raisebox{0.5ex}{$\displaystyle\centerdot$}}}%
+             {\mathbin{\raisebox{0.5ex}{$\centerdot$}}}%
+             {\mathbin{\raisebox{0.25ex}{$\scriptstyle\,\centerdot\,$}}}%
+             {\mathbin{\raisebox{0.1ex}{$\scriptscriptstyle\,\centerdot\,$}}}
+}
+
 \title{Pattern matching in homotopy type theory}
 
 \author{First year report \\\\ Gabe Dijkstra}
@@ -81,6 +89,20 @@ dingen foo
 \chapter{Homotopy type theory}
 
 Short introduction to homotopy type theory.
+
+\begin{code}
+  transport  :   (A : Type0)
+                 (B : A -> Type0)
+                 (x y : A)
+                 (p : x eqA y)
+             ->  B x -> B y
+\end{code}
+
+It can happen that we want to compare a value of type |B x| with
+something of type |B y|, while having a proof of |x eqA y|. Using
+|transport| we can transform the left hand side to something of type
+|B y|, so we can compare the two. The notation for |transport A B x y
+p u == v| is |u == v [B down p]|.
 
 \chapter{Higher inductive types}
 \label{ch:hit}
@@ -133,9 +155,19 @@ theory respects equality:
                          -> ap (Circle-elim Z zb zloop) == zloop
 \end{code}
 
-\todoi{Circle-elim-dep, without computation rules on points, but with
-  the one on paths: in fact one only has to changed |ap| to
-  |apd|. Mention this, don't show everything.}
+The above rules show us that when we want to define a function |f :
+Circle -> Z|, we have to say what |f base| and |ap f loop| should be.
+
+We also need the \emph{dependent} elimination principle on circles,
+which is as one would expect:
+
+\begin{code}
+  Circle-elim-dep  : (Z : Circle -> Type0) (zb : Z base) (zloop : zb == zb [Z down loop]) 
+                   -> (x : Circle) -> Z x
+\end{code}
+
+The computation rule for points is the same and the rule for paths is
+almost the same: we only have to replace |ap| with |apd|.
 
 \subsection{Propositional truncation}
 
@@ -158,6 +190,14 @@ with the elimination principle:
   // A // - elim : (Z : Type0) (f : A -> Z) (trunc : (x y : Z) -> x == y) -> // A // -> Z
 \end{code}
 
+One might think that it should be enough that the image of |f| has to
+be propositional, instead of the whole of |Z| and that the elimination
+principle is too strict. However, any |f : A -> Z| can be factored as
+|A -> Im f -> Z| where |Im f := (z : Z) times (a : A) times f a == z|
+and the function |Im f -> Z| is just the first projection. If we can
+show that |Im f| is propositional, then we get |// A // -> Im f| hence
+|// A // -> Z|.
+
 \subsection{Torus}
 
 The two examples we have seen so far are special cases of \hits,
@@ -174,7 +214,10 @@ of the torus, which has:
 \item such that their composition commutes: |t : p trans q == q trans p|
 \end{itemize}
 
-\todoi{Elimination rules}
+In order to eliminate from the torus, we not only need to provide a
+base point |zb : Z| with two loops |zp zq : zb == zb|, but also a
+proof that the loops commute, \ie a proof of |zp trans zq == zq trans
+zp|.
 
 \subsection{Set truncation}
 
@@ -195,19 +238,56 @@ is $0$-truncation, or set truncation, which is given by:
 \end{itemize}
 
 The path constructor forces axiom K to hold for the type |// A ///|,
-making it a set.
+making it a set. If we want to eliminate into |Z|, we need to make
+sure that |Z| is a set:
 
-\todoi{Elimination rules}
+\begin{code}
+  // A ///-elim  :   (Z : Type0) 
+                      (f : A -> Z)
+                      (trunc : (x y : Z) -> (p : x == y) -> p == refl)
+                  ->  // A /// -> Z
+\end{code}
+
+Just as with propositional truncation, it is actually enough for the
+image of |f| to be a set and we can use the factorisation trick to get
+the function |// A /// -> Z| we want.
 
 \subsection{Hub-spokes construction}
 
 It has been observed that one actually can do without the higher path
-constructors: every $n$-HIT can be reduced to a \onehit. For example,
-the disc may be realised as a circle with an added point constructors
-(the hub) along with a continuous function of paths from points on the
-circle to the hub (the spokes). 
+constructors \citep{Lumsdaine2012}: every $n$-HIT can be reduced to a
+\onehit. For example, the disc may be realised as a circle with an
+added point constructors (the hub) along with a continuous function of
+paths from points on the circle to the hub (the spokes). More
+precisely: the disc can be realised as the following \hit:
 
-\todoi{Elaborate}
+\begin{itemize}
+\item a $0$-constructor |base : Disc|
+\item a $1$-constructor |loop : base == base|
+\item a $2$-constructor |fill : loop == refl|
+\end{itemize}
+
+The hub and spokes variant of this would be:
+
+\begin{itemize}
+\item a $0$-constructor |base : Disc|
+\item a $0$-constructor |hub : Disc|
+\item a $1$-constructor |loop : base == base|
+\item a $1$-constructor |spokes : (x : Circle) -> f x == hub|
+\end{itemize}
+
+where |f : Circle -> Disc| is defined with |f base := base| and |ap f
+loop := loop|. The filling in should be seen as gluing in the cone of
+the circle, where the boundary of the circle is glued to the loop of
+the disc.
+
+The disc itself is not the most exciting example for this
+construction, as it is a contractible type. However, replacing
+$n$-constructors by a gluing operation of a cone of an $(n-1)$-sphere
+means that we can replace any $n$-constructor by an
+$(n-1)$-constructor, where $n > 1$. If we do this iteratively, we see
+that we at most need $1$-constructors to describe our \hits.
+
 
 \section{Containers}
 
@@ -422,15 +502,13 @@ by the free monad of the functor of which the data type at hand is the
 initial algebra.
 
 Given a container, we can construct the free monad of the extension of
-the container as a new data type |Free|\footnote{This data type can
+the container as a new data type |Free|, given parameters |C : Cont|
+and |X : Type0|, with point constructors\footnote{This data type can
   easily be described as W-type. Here we will use this notation along
-  with pattern matching definitions to improve readability.}, given
-parameters |C : Cont| and |X : Type0|, with point constructors:
-
-\todo{Any reason to use |eta| instead of |return|? Also use |mu|?}
+  with pattern matching definitions to improve readability.}:
 
 \begin{itemize}
-\item |eta : X -> Free C X|
+\item |return : X -> Free C X|
 \item |roll : sem(C) (Free C X) -> Free C X|
 \end{itemize}
 
@@ -438,7 +516,7 @@ The |join| operation can be defined as follows:
 
 \begin{code}
   join : {C : Cont} {X : Type0} -> Free C (Free C X) -> Free C X
-  join {C} (eta c)   := c
+  join {C} (return c)   := c
   join {C} (roll x)  := roll (map C join x)
 \end{code}
 
@@ -446,7 +524,7 @@ The above definition does not immediately look like it is structurally
 recursive, but if we inline the definition of |map|, it does becomes
 the case.
 
-Defining |eta| and |join| is of course not enough: one needs to show
+Defining |return| and |join| is of course not enough: one needs to show
 that these follow the monad laws. Before we can define the monad laws,
 we need to show that |Free C| is a functor for every |C :
 Cont|. Instead of defining a new |map| function for this data type and
@@ -521,7 +599,7 @@ following must commute:
     \node (T)  [right of=X] {|sem (C *) X|};
     \node (X') [below of=T] {|X|};
 
-    \draw[->] (X) to node {|eta|} (T);
+    \draw[->] (X) to node {|return|} (T);
     \draw[->] (T) to node {|theta|} (X');
     \draw[->] (X) to node[swap] {|id|} (X');
   \end{tikzpicture}
@@ -587,12 +665,12 @@ The point and path constructors are then as follows, if we call the
 type we are defining |H|:
 
 \begin{itemize}
-\item |c0 : sem(C0) H -> H|
-\item |c1 : (s : S1) -> (v : P1 s -> H) -> inst v (l s) == inst v (r s)|
+\item |sup0 : sem(C0) H -> H|
+\item |sup1 : (s : S1) -> (v : P1 s -> H) -> inst v (l s) == inst v (r s)|
 \end{itemize}
 
 \todoi{Note that the version of |inst| here is a bit different:
-  instead of doing |lift sup|, we do |lift c0|}
+  instead of doing |lift sup|, we do |lift sup0|}
 
 The argument of type |P1 s -> H| of the path constructor can be read
 as the assignment of the free variables.
@@ -622,14 +700,14 @@ elimination principle applied to a canonical \emph{point}, we want a
 computation rule that explains how to reduce the elimination principle
 applied to a canonical \emph{path}. Just as the above refers to the
 algebra |theta| on points, we expect the path computation rule to
-refer to the ``algebra'' on paths. Both |c1| as well as |rho| expect a
+refer to the ``algebra'' on paths. Both |sup1| as well as |rho| expect a
 substitution, but |rho| expects a substitution into |Z| instead of
 |H|, but any |v : X -> H| induces a |v' : X -> Z| by postcomposition
 with |elim Z theta rho|. Using this, a somewhat sensible candidate for
 the path computation rule is;
 
 \begin{code}
-  ap (elim Z theta rho) (c1 s v) == rho s (\ x -> elim Z theta rho (v x))
+  ap (elim Z theta rho) (sup1 s v) == rho s (\ x -> elim Z theta rho (v x))
 \end{code}
 
 However, the substitution However, this does not type check, as the
@@ -655,7 +733,7 @@ type with one point constructor (|base|) and one path constructor
 \item |C1 := 1 lhd (\ s -> 0)|, \ie one point constructor without any variables or arguments.
 \end{itemize}
 
-We can now define |base := c0 (tt , exfalso)|, which we need in the
+We can now define |base := sup0 (tt , exfalso)|, which we need in the
 data for the path constructor:
 
 \begin{itemize}
@@ -668,7 +746,7 @@ type:
 
 \begin{code}
   loop : base == base
-  loop := c1 tt exfalso
+  loop := sup1 tt exfalso
 \end{code}
 
 However, this does not type check.
@@ -680,7 +758,7 @@ constructor |A -> // A //| and one path constructor |(x y : // A //)
 -> x == y|. This means that |C0 := A lhd (\ s -> 0)| and |S1 := 1|
 with |P1 x := Bool|. The truncation equation is given by |l x := sup
 (inl true) exfalso| and |r x := sup (inl false)|. From this data we can
-define |[ x ] := c0 x exfalso| and |trunc x y := c1 tt (\ b -> if b
+define |[ x ] := sup0 x exfalso| and |trunc x y := sup1 tt (\ b -> if b
 then x else y) exfalso|.
 
 \todoi{Show that the elimination principles just work out nicely.}
@@ -700,8 +778,8 @@ Paolo Capriotti, is as follows:
 The constructors of the type |H| that we are defining, are:
 
 \begin{itemize}
-\item |c0 : sem(C0) H -> H|
-\item |c1 : (x : sem(C1) H) -> lift c0 (left !! x) == lift c0 (right !! x)|
+\item |sup0 : sem(C0) H -> H|
+\item |sup1 : (x : sem(C1) H) -> lift sup0 (left !! x) == lift sup0 (right !! x)|
 \end{itemize}
 
 The description of the data looks similar to the previous approach,
@@ -721,14 +799,14 @@ which is the same as giving two functions:
   l1 : (s : S1) -> P0* (l0 s) -> P1 s
 \end{code}
 
-We now need to show that |lift c0 ((mk-nat l0 l1) !! (s , v)) == inst v
+We now need to show that |lift sup0 ((mk-nat l0 l1) !! (s , v)) == inst v
 (l s)| (and similarly for |r|):
 
 \begin{code}
-  lift c0 ((mk-nat l0 l1) !! (s , v)) ==
-  lift c0 (l0 s , \ i -> v (l1 (l0 s) i)) ==
-  lift c0 (map (C0 *) v (l0 s, l1 (l0 s)) ==
-  lift c0 (map (C0 *) v (l s)) ==
+  lift sup0 ((mk-nat l0 l1) !! (s , v)) ==
+  lift sup0 (l0 s , \ i -> v (l1 (l0 s) i)) ==
+  lift sup0 (map (C0 *) v (l0 s, l1 (l0 s)) ==
+  lift sup0 (map (C0 *) v (l s)) ==
   inst v (l s)
 \end{code}
 
@@ -744,21 +822,21 @@ The elimination principle is given by, which is also equivalent to the previous 
 along with the computation rule for points:
 
 \begin{code}
-  elim Z theta rho (c0 m) = theta (map C0 (elim Z theta rho) m)
+  elim Z theta rho (sup0 m) = theta (map C0 (elim Z theta rho) m)
 \end{code}
 
 Of course, we still have the problem of defining our path computation rule as:
 
 \begin{code}
-  ap (elim Z theta rho) (c1 m) == rho (map C0 (elim Z theta rho) m)
+  ap (elim Z theta rho) (sup1 m) == rho (map C0 (elim Z theta rho) m)
 \end{code}
 
 However, with this representation it becomes a bit clearer what
 diagrams have to commute in order for this to work. We have:
 
 \begin{code}
-  ap (elim Z theta rho) (c1 m) : 
-    elim Z theta rho (lift c0 (left !! m)) == elim Z theta rho (lift c0 (right !! m))
+  ap (elim Z theta rho) (sup1 m) : 
+    elim Z theta rho (lift sup0 (left !! m)) == elim Z theta rho (lift sup0 (right !! m))
 \end{code}
 
 versus
@@ -783,7 +861,7 @@ asserting the commutativity of the following diagram:
  };
 
  \path[->] (m-1-1) edge[decorate] node[auto] {|left H|} (m-1-3);
- \path[->] (m-1-3) edge[decorate] node[auto] {|lift c0|} (m-1-5);
+ \path[->] (m-1-3) edge[decorate] node[auto] {|lift sup0|} (m-1-5);
  \path[->] (m-1-1) edge[decorate] node[auto, swap] {|map C0 (elim theta rho)|} (m-2-1);
  \path[->] (m-1-5) edge[decorate] node[auto] {|elim theta rho|} (m-2-5);
  \path[->] (m-2-1) edge[decorate] node[auto, swap] {|left Z|} (m-2-3);
@@ -806,7 +884,7 @@ We can fill in the diagram by adding an arrow |sem(C0 *) H -> sem(C0
  };
 
  \path[->] (m-1-1) edge[decorate] node[auto] {|left H|} (m-1-3);
- \path[->] (m-1-3) edge[decorate] node[auto] {|lift c0|} (m-1-5);
+ \path[->] (m-1-3) edge[decorate] node[auto] {|lift sup0|} (m-1-5);
  \path[->] (m-1-1) edge[decorate] node[auto, swap] {|map C0 (elim theta rho)|} (m-2-1);
  \path[->] (m-1-3) edge[decorate] node[auto, swap] {|map (C0*) (elim theta rho)|} (m-2-3);
  \path[->] (m-1-5) edge[decorate] node[auto] {|elim theta rho|} (m-2-5);
@@ -817,7 +895,7 @@ We can fill in the diagram by adding an arrow |sem(C0 *) H -> sem(C0
 
 The resulting square on the left holds by naturality. The square on
 the right is the statement that |elim theta rho| is an algebra
-homomorphism from |lift c0| to |lift theta|. This can be proven.
+homomorphism from |lift sup0| to |lift theta|. This can be proven.
 
 \todoi{Something on the technicalities: |Free C0 X| vs. |sem(C0 *)
   X|?}
