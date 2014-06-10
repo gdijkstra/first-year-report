@@ -27,6 +27,8 @@
 ]{biblatex}
 \addbibresource{latex-base/refs.bib}
 
+
+
 \usepackage{tikz}
 \usetikzlibrary{decorations.pathmorphing} % for snake lines
 \usetikzlibrary{matrix}
@@ -37,6 +39,7 @@
 \tikzset{node distance=2cm, auto}
 
 \newcommand{\withoutk}{\xspace\verb+--without-K+\xspace}
+\newcommand{\uip}{uniqueness of identity proofs\xspace}
 \newcommand{\hott}{homotopy type theory\xspace}
 \newcommand{\Hott}{Homotopy type theory\xspace}
 \newcommand{\mltt}{Martin-L\"of's type theory\xspace}
@@ -67,7 +70,7 @@
 
 \title{Pattern matching in homotopy type theory}
 
-\author{First year report \\\\ Gabe Dijkstra}
+\author{draft \\\\ First year report \\\\ Gabe Dijkstra}
 
 \date{\today}
 
@@ -87,11 +90,118 @@ module report where
 \label{ch:preface}
 \addcontentsline{toc}{chapter}{Preface}
 
-dingen foo
+This report documents some of the things I have been looking at in the
+first year of my PhD, along with future research directions. As the
+title suggests, the subjects of study all have to do with pattern
+matching and \hott. There is the justification of forms of (dependent)
+pattern matching using the terminology of \hott, but there is also the
+exploration of new forms of pattern matching on the \hits that \hott
+brings to the table.
+
+Chapter~\ref{ch:homotopy-type-theory} introduces some of the basic
+terminology and notation used throughout the report. Before one can
+talk about pattern matching on \hits, one needs a more refined
+definition of what these are, which is done in
+chapter~\ref{ch:hit}. In this chapter, the concept is introduced by
+giving several examples. We then try to give formal definitions of a
+restricted version of \hits, the so-called \onehits.
+
+Chapter~\ref{ch:patmatch} discusses dependent pattern matching, how it
+is at odds with \hott in its original form and how one can restrict the
+notion to get something that is consistent with \hott. We hope to
+eventually give an (internal) account of dependent pattern matching
+and hope to give a semantic explanation of the concept using the
+language of \hott.
 
 \chapter{Homotopy type theory}
+\label{ch:homotopy-type-theory}
 
-Short introduction to homotopy type theory.
+\Hott studies the correspondence between homotopy theory and type
+theory. To explain what the correspondence is, we first need to define
+the notion of equality internal to type theory: \emph{propositional
+  equality}. Propositional equality can be defined in type theory as
+the inductive family |Eq : (X : Type0) -> X -> X -> Type0|, with
+constructor\footnote{Following Agda's syntax, curly braces around an
+  argument indicate that it is an \emph{implicit} argument. The
+  argument can be left out when calling the function, as its value can
+  be inferred from the other arguments.}:
+
+\begin{itemize}
+\item |refl : {X : Type0} {x : X} -> Eq X x x|
+\end{itemize}
+
+We will usually denote |Eq A x y| by |x == y|, leaving the type
+argument implicit. The type |Eq| comes equipped with an elimination
+principle, often called the |J| rule:
+
+\begin{code}
+  J :   (A : Type0)
+    ->  (P : (x y : A) -> (p : Id A x y) -> Type0)
+    -> (c : (x : A) -> P x x refl)
+    -> (x y : A) -> (p : Id A x y)
+    -> P x y p
+\end{code}
+
+with computation rule:
+
+\begin{code}
+  J A P c x x refl = c x
+\end{code}
+
+
+Using |J|, one can show that the relation given by |Eq| is an equality
+relation, \ie we have terms of the following types, for any |X :
+Type0|:
+
+\begin{itemize}
+\item |refl : x == x| for any |x : X|
+\item |sym : x == y -> y == x| for any |x y : X|
+\item |trans' : x == y -> y == z -> x == z| for any |x y z : X|
+\end{itemize}
+
+One can also show that these operations give us a groupoid:
+transitivity is associative, symmetry acts as an inverse operation and
+reflexivity is the unit for transitivity. However, the groupoid laws
+of propositional equalities on some type |X : Type0| hold only up to
+propositional equality, and so on: we do not really get a groupoid,
+but an $\omega$-groupoid. These $\omega$-groupoids also occur in
+homotopy theory: two points in a space may be connected by a path,
+paths may be inverted, composed and there is always a constant path
+from a point to itself. One can consider ``paths'' between paths,
+namely homotopies, which continuous deformations transforming one path
+into the other. One can show that the operations on paths follow the
+same laws as |refl|, |sym| and |trans'| do, up to homotopy. This
+observation leads us to the following correspondence:
+
+\begin{center}%
+\begin{tabular}{||l||l||}%
+\hline%
+ \textbf{type theory}  &  \textbf{homotopy theory}  \\%
+\hline%
+ |A| is a type                    &  |A| is a space                              \\%
+ |x, y : A|                       &  |x| and |y| are points in |A|               \\%
+ |p, q : x == y|                  &  |p| and |q| are paths from |x| to |y|       \\%
+ |w : p == q|                     &  |w| is a homotopy between paths |p| and |q| \\%
+ \multicolumn{1}{||c||}{$\vdots$} & \multicolumn{1}{||c||}{$\vdots$}             \\%
+\hline%
+\end{tabular}%
+\end{center}%
+
+Other important properties of propositional equality is that every
+function defined in type theory respects these equalities\footnote{The
+  name |ap| stands for ``action paths'': one can consider functions to
+  be functors, as provide a mapping between points and a mapping
+  between morphisms, namely the paths, which respects the identity
+  path and path composition.} :
+
+\begin{code}
+  ap : {A B : Type0} -> (f : A -> B) -> {x y : A} -> x == y -> f x == f y
+\end{code}
+
+If we try to generalise the argument |f : A -> B| to its dependent
+form |f : (a : A) -> B a|, we run into trouble comparing |f x| with |f
+y|, as they have different types. However, if we have a proof that |x
+== y|, we can define a function |B x -> B y|:
 
 \begin{code}
   transport  :   (A : Type0)
@@ -101,13 +211,21 @@ Short introduction to homotopy type theory.
              ->  B x -> B y
 \end{code}
 
-It can happen that we want to compare a value of type |B x| with
-something of type |B y|, while having a proof of |x eqA y|. Using
-|transport| we can transform the left hand side to something of type
-|B y|, so we can compare the two. The notation for |transport A B x y
-p u == v| is |u == v [B down p]|.
+Using |transport| we can transform the left hand side to something of
+type |B y|, so we can compare the two. The notation for |transport A B
+x y p u == v| is |u == v [B down p]|. We can now define the dependent
+version of |ap|:
 
-\todoi{Introduce curly braces notation}
+\begin{code}
+  apd  :   {A : Universe} {B : A -> Universe} {x y : A} 
+       ->  (f : (a : A) -> B a) -> (p : x == y)
+       ->  f x == f y [B down p]
+\end{code}
+
+As we have already seen, we are following Agda's notation for
+$\Pi$-types. For $\Sigma$-types we will use the notation |(a : A)
+times B a| for |Sig A (\a -> B a)| to improve readability when dealing
+with nested $\Sigma$-types.
 
 \chapter{Higher inductive types}
 \label{ch:hit}
@@ -115,12 +233,11 @@ p u == v| is |u == v [B down p]|.
 \Hott teaches us that we can regard types as topological spaces up to
 homotopy. This leads us to the question of how we can represent
 familiar spaces such as the circle and the torus in a type theoretic
-way. So far several examples of what \hits
-may look like have been explored, \todo{Citations} but formal scheme
-has been devised as of yet. In this chapter we will explore ways to
-formalise (restricted) notions of higher inductive types.
-
-\todoi{More motivation}
+way. So far several examples of what \hits may look like have been
+explored, but a formal scheme of the general syntax of \hit
+definitions has not been devised as of yet. In this chapter we will
+explore ways to formalise (restricted) notions of higher inductive
+types.
 
 \section{Examples}
 
@@ -242,7 +359,7 @@ is $0$-truncation, or set truncation, which is given by:
 \item a path constructor |trunc0 : (x : // A ///) (p : x == x) -> p == refl|
 \end{itemize}
 
-The path constructor forces axiom K to hold for the type |// A ///|,
+The path constructor forces \uip to hold for the type |// A ///|,
 making it a set. If we want to eliminate into |Z|, we need to make
 sure that |Z| is a set:
 
@@ -260,7 +377,7 @@ the function |// A /// -> Z| we want.
 \subsection{Hub-spokes construction}
 
 It has been observed that one actually can do without the higher path
-constructors \citep{Lumsdaine2012}: every $n$-HIT can be reduced to a
+constructors \parencite{Lumsdaine2012}: every $n$-HIT can be reduced to a
 \onehit. For example, the disc may be realised as a circle with an
 added point constructors (the hub) along with a continuous function of
 paths from points on the circle to the hub (the spokes). More
@@ -362,7 +479,7 @@ problem that there are multiple representations of the same type, \eg
 the unit type can be described as |`1| or |`1 `+ `0|, etc.
 
 Another way to more succinctly formalise the notion of strictly
-positive functors is as \emph{containers} \citep{Abbott2005}: a
+positive functors is as \emph{containers} \parencite{Abbott2005}: a
 container is a pair |S : Type0|, the type of \emph{shapes}, and |P : S
 -> Type0|, the type of \emph{positions}, denoted |S lhd P|. The
 container then describes the functor |sem(S lhd P) X = (s : S) times
@@ -488,6 +605,9 @@ types can be defined as follows:
   apply-mor : Mor C0 C1 -> (X : Type0) -> sem(C0) X -> sem(C1) X
   apply-mor (mk-mor f g) X (s , u) := (f s , \i -> u (g (f s) i))
 \end{code}
+
+We will use the notation |m !! x| (where |m : Mor C0 C1| and |x :
+sem(C0) X|, for some |X : Type0| and |C0 => C1| for |Mor C0 C1|.
 
 It so happens that container morphisms are in fact natural
 transformations. Given |C0 C1 : Container| and |X Y : Type0|, the
@@ -834,11 +954,11 @@ which is the same as giving two functions:
   l1 : (s : S1) -> P0* (l0 s) -> P1 s
 \end{code}
 
-We now need to show that |lift sup0 ((mk-nat l0 l1) !! (s , v)) == inst v
+We now need to show that |lift sup0 ((mk-mor l0 l1) !! (s , v)) == inst v
 (l s)| (and similarly for |r|):
 
 \begin{code}
-  lift sup0 ((mk-nat l0 l1) !! (s , v))      ==
+  lift sup0 ((mk-mor l0 l1) !! (s , v))      ==
   lift sup0 (l0 s , \ i -> v (l1 (l0 s) i))  ==
   lift sup0 (map (C0 *) v (l0 s, l1 (l0 s))  ==
   lift sup0 (map (C0 *) v (l s))             ==
@@ -895,11 +1015,11 @@ asserting the commutativity of the following diagram:
    |sem(C1) Z| & & |sem(C0*) Z| & & Z \\
  };
 
- \path[->] (m-1-1) edge[decorate] node[auto] {|left H|} (m-1-3);
+ \path[->] (m-1-1) edge[decorate] node[auto] {|leftH|} (m-1-3);
  \path[->] (m-1-3) edge[decorate] node[auto] {|lift sup0|} (m-1-5);
  \path[->] (m-1-1) edge[decorate] node[auto, swap] {|map C0 (elim theta rho)|} (m-2-1);
  \path[->] (m-1-5) edge[decorate] node[auto] {|elim theta rho|} (m-2-5);
- \path[->] (m-2-1) edge[decorate] node[auto, swap] {|left Z|} (m-2-3);
+ \path[->] (m-2-1) edge[decorate] node[auto, swap] {|leftZ|} (m-2-3);
  \path[->] (m-2-3) edge[decorate] node[auto, swap] {|lift theta|} (m-2-5);
   \end{tikzpicture}
 \end{center}
@@ -918,12 +1038,12 @@ We can fill in the diagram by adding an arrow |sem(C0 *) H -> sem(C0
    |sem(C1) Z| & & |sem(C0*) Z| & & Z \\
  };
 
- \path[->] (m-1-1) edge[decorate] node[auto] {|left H|} (m-1-3);
+ \path[->] (m-1-1) edge[decorate] node[auto] {|leftH|} (m-1-3);
  \path[->] (m-1-3) edge[decorate] node[auto] {|lift sup0|} (m-1-5);
  \path[->] (m-1-1) edge[decorate] node[auto, swap] {|map C0 (elim theta rho)|} (m-2-1);
  \path[->] (m-1-3) edge[decorate] node[auto, swap] {|map (C0*) (elim theta rho)|} (m-2-3);
  \path[->] (m-1-5) edge[decorate] node[auto] {|elim theta rho|} (m-2-5);
- \path[->] (m-2-1) edge[decorate] node[auto, swap] {|left Z|} (m-2-3);
+ \path[->] (m-2-1) edge[decorate] node[auto, swap] {|leftZ|} (m-2-3);
  \path[->] (m-2-3) edge[decorate] node[auto, swap] {|lift theta|} (m-2-5);
   \end{tikzpicture}
 \end{center}
@@ -934,6 +1054,14 @@ homomorphism from |lift sup0| to |lift theta|. We can prove this if we
 substitute |sem(C0 *) H| and |sem(C0 *) Z| with |Free C H| and |Free C
 X| respectively. After this substitution, the commutativity can be
 shown to hold by induction on |Free C H|.
+
+\begin{researchdir}
+  A lot of the above has been formalised in Agda. However, there are
+  still some details missing, most notably a complete proof of |Free C
+  X| and |sem(C *) X| being equal for every |X : Type0|. Finishing the
+  Agda formalisation and documenting it properly is an important
+  research direction.
+\end{researchdir}
 
 \subsection{Limitations of the construction}
 
@@ -953,8 +1081,8 @@ construction, \eg we cannot define the type |A| given by the point constructor:
 \end{itemize}
 
 For this to work we would need to find a |S : Type0| and a |P : S ->
-Type0| such that for every |X : Type0| we have |(s : S) times P s -> X
-= // X //|, which does not seem to be the case.
+Type0| such that for every |X : Type0| we have |((s : S) times P s -> X)
+== // X //|, which does not seem to be the case.
 
 \begin{researchdir}
   Find out how we can change our construction such that we can define
@@ -1029,6 +1157,65 @@ path constructors:
   a proof of its correctness.
 \end{researchdir}
 
+\section{Higher inductive-recursive types}
+
+When implementing type theory in type theory, a common way to describe
+the universe of types, is by an inductive-recursive definition. One
+defines a data type of codes of types |U : Type0| together with the
+interpretation function |El : U -> Type0|:
+
+\begin{itemize}
+\item |sig : (A : U) -> (El a -> U) -> U|
+\item |pi : (A : U) -> (El a -> U) -> U|
+\item |`0 : U|
+\item |`1 : U|
+\end{itemize}
+
+Along with |El|:
+
+\begin{code}
+  El (sig A B)  = (a : El A) times El (B a)
+  El (pi A B)   = (a : El A) -> El (B a)
+  El `0         = 0
+  El `1         = 1
+\end{code}
+
+In \hott, we would like this universe to be univalent: any two codes
+|x y : U| should be equal if their interpretations are equal. This can
+be achieved by adding a path constructor, as proposed
+in~\cite{Shulman2014}:
+
+\begin{itemize}
+\item |ua : (x y : U) -> El x == El y -> x == y|
+\end{itemize}
+
+However, adding this on its own is not enough. |U| now has too many
+equalities, \eg |ua `1 `1 refl| is not provably equal to |refl : `1 ==
+`1|; we want |El x == El y| to be equivalent to |x == y|. This can be
+achieved by adding the following coherency condition:
+
+\begin{itemize}
+\item |coh : (x y : U) (p : El x == El y) -> ap El (ua x y p) == p|
+\end{itemize}
+
+\begin{researchdir}
+  Find and formalise a notion of inductive-recursive \onehits.
+\end{researchdir}
+
+\section{Pattern matching on \hits}
+
+The ultimate goal of the above is to eventually be able to give a form
+of pattern matching on \hits. Just as with ordinary inductive types,
+it is painful to write definitions ``by hand'' using only the
+elimination principles. This becomes very apparent when defining
+functions that require recursion or discriminate on multiple
+arguments.
+
+\begin{researchdir}
+  Find examples of functions on specific \hits and try to find forms
+  of pattern matching that would make these definitions more elegant.
+\end{researchdir}
+
 
 \chapter{Dependent pattern matching}
 \label{ch:patmatch}
@@ -1075,11 +1262,12 @@ which is less readable then our original definition. It would be nice
 if we added pattern matching to \mltt. However, we do need to be
 careful when we do this. We have to be sure that our pattern matching
 definitions are total. As it turns out, it is sufficient
-\citep{Coquand1992} to check that the patterns are \emph{covering} and
+\parencite{Coquand1992} to check that the patterns are \emph{covering} and
 that the recursive calls are done on \emph{structurally smaller}
-arguments.
-
-\todoi{Elaborate on this?}
+arguments of the patterns. For example, if we were pattern matching on
+a list, the recursive calls in the |cons x xs| case must be done on
+|xs|. This ensures that the recursion eventually reaches a base case
+and the definition yields a terminating function.
 
 \section{Inductive families}
 
@@ -1155,8 +1343,8 @@ using dependent pattern matching, we can easily prove this:
 Proving this using only the elimination principle of identity types
 turns out to be impossible: one can construct models of \mltt with
 identity types in which the uniquenes of identity proofs property does
-not hold for every type. In \hott people are specifically interested
-in the models that violate this principle, hence dependent pattern
+not hold for every type. In \hott, we are specifically interested in
+the models that violate this principle, hence dependent pattern
 matching in its unrestricted form is incompatible with \hott. We hope
 to uncover what the root of this incompatibility is and whether we can
 find a variation of dependent pattern matching that is not at odds
@@ -1193,16 +1381,35 @@ type, so the |nil| case can be ignored. Note that we also have |q : n
 == S m|, corresponding to the dot pattern |.(S n)| in the previous
 definition of |head|.
 
-\todoi{Mention the Cockx paper and observations, work out how UIP becomes a problem}
+\section{Correctness of dependent pattern matching}
 
-\todoi{Cockx' work is very syntactic. My goal is to give a more
-  semantic/internal account of pattern matching. Idea: create DSL for
-  inductive types along with what pattern matching should look like.}
+It has been shown in~\cite{Goguen2006} that dependent pattern matching
+is correct if one assumes \uip: one can translate a definition written
+using dependent pattern matching into one that only makes use of the
+elimination principles of the data types being used, possibly along
+with use of \uip.
+
+In~\cite{Cockx2014}, the authors describe a criterium under which
+dependent pattern matching is safe, even when one does not assume
+\uip. However, the proof that the criterium is sufficient is rather
+syntactic.
+
+\begin{researchdir}
+  Give an internal proof of the correctness of a restricted form of
+  dependent pattern matching. In order to do this, one has to first
+  internalise a right notion of inductive family and then internalise
+  a notion of dependent pattern matching. If the latter can be done by
+  only using the elimination principles of the data types at hand, we
+  have shown that the form of dependent pattern matching is correct.
+
+  Internalising this might also help giving insight in what happens
+  semantically.
+\end{researchdir}
 
 \section{Other inconsistencies with dependent pattern matching}
 
 Another inconsistency in Agda's pattern matching mechanism has been
-uncovered on the Agda mailing list\todo{citation}. Suppose we have a
+uncovered on the Agda mailing list~\parencite{McBride2014}. Suppose we have a
 type |Box| with one constructor:
 
 \begin{itemize}
@@ -1234,9 +1441,11 @@ Using |noo| we can now define an inhabitant of |0| as follows:
 \end{code}
 
 \begin{researchdir}
-  \todoi{Find out why this is evil.}
+  Find out whether the above inconsistency is because Agda does not
+  follow the rules described in~\cite{Goguen2006} closely enough or if
+  the paper has some implicit hypotheses that are needed for the
+  proofs to go through.
 \end{researchdir}
-
 
 \printbibliography
 
