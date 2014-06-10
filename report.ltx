@@ -2,33 +2,57 @@
 
 %include report.fmt
 
-\newcommand{\todoi}[1]{\todo[inline]{#1}}
+\usepackage{color}
+\usepackage[usenames,dvipsnames,svgnames,table]{xcolor}
 
-\usepackage[activate={true,nocompatibility},final,tracking=true,kerning=true,spacing=true,factor=1100,stretch=10,shrink=10,protrusion=trues]{microtype}
+
+%% Encoding, font stuff
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage[parfill]{parskip}
-\usepackage{amsmath,amsthm,amssymb,stmaryrd}
-\usepackage{todonotes}
+\usepackage[activate={true,nocompatibility},final,tracking=true,kerning=true,spacing=true,factor=1100,stretch=10,shrink=10,protrusion=trues]{microtype}
 \usepackage{tgpagella}
-\usepackage{url}
+
+%% Symbols and whatever
+\usepackage{amsmath,amsthm,amssymb,stmaryrd}
+
+%% Layout stuff and other related goodies.
+\usepackage[firstpage]{draftwatermark} % DRAFT only obviously
+\usepackage[parfill]{parskip}
 \usepackage{xspace}
+\usepackage{todonotes}
+\setcounter{tocdepth}{1}
+
+
+%% URLs and other link stuff
+\usepackage{url}
+\usepackage{hyperref}
+\usepackage[noabbrev]{cleveref}
+
+\hypersetup{
+  colorlinks,
+  citecolor=DarkBlue,
+  linkcolor=black,
+  urlcolor=DarkBlue}
+
 
 % Bibliography stuff
 \usepackage[autostyle]{csquotes}
 
 \usepackage[
     backend=biber,
-    style=authoryear-icomp,
+    bibstyle=numeric,
+    citestyle=authoryear,
     natbib=true,
+    hyperref=true,
     url=false, 
     doi=true,
     eprint=false
 ]{biblatex}
 \addbibresource{latex-base/refs.bib}
 
+\input{latex-base/fixbib.tex}
 
-
+%% Tikz setup
 \usepackage{tikz}
 \usetikzlibrary{decorations.pathmorphing} % for snake lines
 \usetikzlibrary{matrix}
@@ -38,6 +62,8 @@
 \tikzstyle{snakelin} = [->, decoration={zigzag, pre length=0.1cm, post length=0.1cm, segment length=1.5mm, amplitude=.25mm}]
 \tikzset{node distance=2cm, auto}
 
+%% Commands
+\newcommand{\todoi}[1]{\todo[inline]{#1}}
 \newcommand{\withoutk}{\xspace\verb+--without-K+\xspace}
 \newcommand{\uip}{uniqueness of identity proofs\xspace}
 \newcommand{\hott}{homotopy type theory\xspace}
@@ -47,6 +73,8 @@
 \newcommand{\Hit}{Higher inductive type\xspace}
 \newcommand{\hits}{higher inductive types\xspace}
 \newcommand{\Hits}{Higher inductive types\xspace}
+\newcommand{\zeroconstructor}{$0$-constructor\xspace}
+\newcommand{\zeroconstructors}{$0$-constructors\xspace}
 \newcommand{\onehit}{$1$-HIT\xspace}
 \newcommand{\onehits}{$1$-HITs\xspace}
 \newcommand{\oneconstructor}{$1$-constructor\xspace}
@@ -58,7 +86,7 @@
 \newcommand{\ie}{i.e.\xspace}
 \newcommand{\eg}{e.g.\xspace}
 
- \newenvironment{researchdir}{\textbf{Research direction}:\xspace}{}
+\newenvironment{researchdir}{\textbf{Research direction}:\xspace}{}
 
 % Path composition from The Book.
 \newcommand{\ct}{%
@@ -70,19 +98,13 @@
 
 \title{Pattern matching in homotopy type theory}
 
-\author{draft \\\\ First year report \\\\ Gabe Dijkstra}
+\author{First year report \\\\ Gabe Dijkstra}
 
 \date{\today}
 
 \begin{document}
 
 \maketitle
-
-%if False
-\begin{code}
-module report where
-\end{code}
-%endif
 
 \tableofcontents
 
@@ -98,15 +120,15 @@ pattern matching using the terminology of \hott, but there is also the
 exploration of new forms of pattern matching on the \hits that \hott
 brings to the table.
 
-Chapter~\ref{ch:homotopy-type-theory} introduces some of the basic
+\Cref{ch:homotopy-type-theory} introduces some of the basic
 terminology and notation used throughout the report. Before one can
 talk about pattern matching on \hits, one needs a more refined
 definition of what these are, which is done in
-chapter~\ref{ch:hit}. In this chapter, the concept is introduced by
+\cref{ch:hit}. In this chapter, the concept is introduced by
 giving several examples. We then try to give formal definitions of a
 restricted version of \hits, the so-called \onehits.
 
-Chapter~\ref{ch:patmatch} discusses dependent pattern matching, how it
+\Cref{ch:patmatch} discusses dependent pattern matching, how it
 is at odds with \hott in its original form and how one can restrict the
 notion to get something that is consistent with \hott. We hope to
 eventually give an (internal) account of dependent pattern matching
@@ -257,15 +279,15 @@ In order to eliminate out of this type, we need to provide a point in
 our codomain and ensure that this point also has a corresponding loop:
 
 \begin{code}
-  Circle-elim : (Z : Type0) (zb : Z) (zloop : zb == zb) -> Circle -> Z
+  Circleelim : (Z : Type0) (zb : Z) (zloop : zb == zb) -> Circle -> Z
 \end{code}
 
 As with ordinary inductive types, the elimination principle should
 also satisfy certain computation rules:
 
 \begin{code}
-  Circle-elim-comp-point  : (Z : Type0) (zb : Z) (zloop : zb == zb)
-                          -> Circle-elim Z zb zloop base == zb
+  Circleelimcomppoint  : (Z : Type0) (zb : Z) (zloop : zb == zb)
+                          -> Circleelim Z zb zloop base == zb
 \end{code}
 
 Apart from computation rules on points, we also need computation rules
@@ -273,8 +295,8 @@ on paths, witnessing the fact that every function defined in type
 theory respects equality:
 
 \begin{code}
-  Circle-elim-comp-path  : (Z : Type0) (zb : Z) (zloop : zb == zb)
-                         -> ap (Circle-elim Z zb zloop) == zloop
+  Circleelimcomppath  : (Z : Type0) (zb : Z) (zloop : zb == zb)
+                         -> ap (Circleelim Z zb zloop) == zloop
 \end{code}
 
 The above rules show us that when we want to define a function |f :
@@ -284,7 +306,7 @@ We also need the \emph{dependent} elimination principle on circles,
 which is as one would expect:
 
 \begin{code}
-  Circle-elim-dep  : (Z : Circle -> Type0) (zb : Z base) (zloop : zb == zb [Z down loop]) 
+  Circleelimdep  : (Z : Circle -> Type0) (zb : Z base) (zloop : zb == zb [Z down loop]) 
                    -> (x : Circle) -> Z x
 \end{code}
 
@@ -309,7 +331,7 @@ regarded as equal. Given |A : Type0|, the propositional truncation of
 with the elimination principle:
 
 \begin{code}
-  // A // - elim : (Z : Type0) (f : A -> Z) (trunc : (x y : Z) -> x == y) -> // A // -> Z
+  Aelim : (Z : Type0) (f : A -> Z) (trunc : (x y : Z) -> x == y) -> // A // -> Z
 \end{code}
 
 One might think that it should be enough that the image of |f| has to
@@ -326,7 +348,7 @@ The two examples we have seen so far are special cases of \hits,
 called \onehits, as the path constructors describe paths between
 points of the type being defined, hence can be called
 \emph{\oneconstructors} (with ordinary point constructors being
-\emph{$0$-constructors}). We can also consider adding constructors for
+\emph{\zeroconstructors}). We can also consider adding constructors for
 paths between paths. One example of this is the following construction
 of the torus, which has:
 
@@ -351,7 +373,7 @@ or variables from one level down, which can be combined with the
 groupoid operations that come with equalities: transitivity, symmetry
 and reflexivity.
 
-One example in which the reflexivity term occurs in a $2$-constructor,
+One example in which the reflexivity term occurs in a \twoconstructor,
 is $0$-truncation, or set truncation, which is given by:
 
 \begin{itemize}
@@ -364,7 +386,7 @@ making it a set. If we want to eliminate into |Z|, we need to make
 sure that |Z| is a set:
 
 \begin{code}
-  // A /// -elim  :   (Z : Type0) 
+  A0elim          :   (Z : Type0) 
                       (f : A -> Z)
                       (trunc : (x y : Z) -> (p : x == y) -> p == refl)
                   ->  // A /// -> Z
@@ -384,18 +406,18 @@ paths from points on the circle to the hub (the spokes). More
 precisely: the disc can be realised as the following \hit:
 
 \begin{itemize}
-\item a $0$-constructor |base : Disc|
-\item a $1$-constructor |loop : base == base|
-\item a $2$-constructor |fill : loop == refl|
+\item a \zeroconstructor |base : Disc|
+\item a \oneconstructor |loop : base == base|
+\item a \twoconstructor |fill : loop == refl|
 \end{itemize}
 
 The hub and spokes variant of this would be:
 
 \begin{itemize}
-\item a $0$-constructor |base : Disc|
-\item a $0$-constructor |hub : Disc|
-\item a $1$-constructor |loop : base == base|
-\item a $1$-constructor |spokes : (x : Circle) -> f x == hub|
+\item a \zeroconstructor |base : Disc|
+\item a \zeroconstructor |hub : Disc|
+\item a \oneconstructor |loop : base == base|
+\item a \oneconstructor |spokes : (x : Circle) -> f x == hub|
 \end{itemize}
 
 where |f : Circle -> Disc| is defined with |f base := base| and |ap f
@@ -408,7 +430,7 @@ construction, as it is a contractible type. However, replacing
 $n$-constructors by a gluing operation of a cone of an $(n-1)$-sphere
 means that we can replace any $n$-constructor by an
 $(n-1)$-constructor, where $n > 1$. If we do this iteratively, we see
-that we at most need $1$-constructors to describe our \hits.
+that we at most need \oneconstructors to describe our \hits.
 
 
 \section{Containers}
@@ -472,7 +494,7 @@ constructor being |Lam : Term -> Term|.
 
 One can formalise the grammar of types in which there are no recursive
 occurrences in negative positions, as is done
-in~\cite{Morris2007}. Formalising this grammar has several
+in~\textcite{Morris2007}. Formalising this grammar has several
 problems. Dealing with binders is usually rather involved as one has
 to use things such as de Bruijn indices. More importantly, one has the
 problem that there are multiple representations of the same type, \eg
@@ -540,7 +562,7 @@ If we unfold the definition of |sem(C)| we get the following:
   u)) = theta (s, \ i -> elim theta (u i))|
 \end{itemize}
 
-which is the \emph{W-type} construction from~\cite{MartinLof1984}.
+which is the \emph{W-type} construction from~\textcite{MartinLof1984}.
 
 Using this we can define the natural numbers as the initial algebra of
 the following container:
@@ -575,11 +597,11 @@ are not unique up to definitional equality, \eg we can define
 For every |x y : Nat|, we have that |zero' x == zero' y|
 propositionally but not definitionally. This can lead to situations
 where certain terms do not have the type we want it to, as we will see
-in section~\ref{sec:circle}. Ideally, the type checker identifies closed terms
+in \cref{sec:circle}. Ideally, the type checker identifies closed terms
 that are equal by function extensionality (such as the terms |\ _ ->
 zero| and |\ _ -> succ zero| of type |0 -> WC|), but this has as side
 effect that any two terms become definitionally equal under a false
-hypothesis, as is described in~\cite{McBride2010ii}. In such a system,
+hypothesis, as is described in~\textcite{McBride2010ii}. In such a system,
 reducing open terms can go wrong.
 
 
@@ -597,13 +619,13 @@ unfolding the definitions, we have to provide two functions:
 \end{itemize}
 
 Let us define the type of container morphisms to be |Mor : Cont ->
-Cont -> Type0| with |mk-mor : (f : S0 -> S1) (g : (s0 : S0) -> P1 (f
+Cont -> Type0| with |mkmor : (f : S0 -> S1) (g : (s0 : S0) -> P1 (f
 s0) -> P0 s0) -> Mor C0 C1|. The action of the container morphism on a
 types can be defined as follows:
 
 \begin{code}
-  apply-mor : Mor C0 C1 -> (X : Type0) -> sem(C0) X -> sem(C1) X
-  apply-mor (mk-mor f g) X (s , u) := (f s , \i -> u (g (f s) i))
+  applymor : Mor C0 C1 -> (X : Type0) -> sem(C0) X -> sem(C1) X
+  applymor (mkmor f g) X (s , u) := (f s , \i -> u (g (f s) i))
 \end{code}
 
 We will use the notation |m !! x| (where |m : Mor C0 C1| and |x :
@@ -611,7 +633,7 @@ sem(C0) X|, for some |X : Type0| and |C0 => C1| for |Mor C0 C1|.
 
 It so happens that container morphisms are in fact natural
 transformations. Given |C0 C1 : Container| and |X Y : Type0|, the
-following commutes definitionally, where |eta := apply-mor m| for
+following commutes definitionally, where |eta := applymor m| for
 some |m : Mor C0 C1|:
 
 \begin{center}
@@ -631,7 +653,7 @@ some |m : Mor C0 C1|:
 We have shown that every container morphism is a natural
 transformation. It also the case that every natural transformation
 between the extensions of two containers can be described by a
-container morphism, as is shown in~\cite{Abbott2005}.
+container morphism, as is shown in~\textcite{Abbott2005}.
 
 \subsection{Free monads}
 
@@ -733,7 +755,7 @@ following must commute:
  { |sem(C *) (sem (C *) X)| & & |sem(C *) X| \\
    |sem(C *) X|    & & |X|    \\ };
 
-  \path[->] (m-1-1) edge[decorate] node[auto]       {|map sem(C *) theta|} (m-1-3);
+  \path[->] (m-1-1) edge[decorate] node[auto]       {|map specialCase theta|} (m-1-3);
   \path[->] (m-1-1) edge[decorate] node[auto,swap]  {|join|} (m-2-1);
   \path[->] (m-1-3) edge[decorate] node[auto]       {|theta|} (m-2-3);
   \path[->] (m-2-1) edge[decorate] node[auto]       {|theta|} (m-2-3);
@@ -828,7 +850,7 @@ interpreted as being the assignment of the free variables.
 
 To eliminate out of a \onehit, we need to say what one needs to be
 done with the point constructors and show that this is done in a way
-that respects the $1$-constructors. This leads us to the following
+that respects the \oneconstructors. This leads us to the following
 elimination principle:
 
 \begin{code}
@@ -869,7 +891,7 @@ theta (map (C0 *) (\ x -> elim Z theta rho (v x)) (r s))|.
 
 This problem can be solved, but with this presentation it is difficult
 to see what is actually going ``wrong'' with the types, hence the
-discussion of this is postponed until section~\ref{sec:altern-constr}.
+discussion of this is postponed until \cref{sec:altern-constr}.
 
 \subsection{Examples}
 
@@ -954,11 +976,11 @@ which is the same as giving two functions:
   l1 : (s : S1) -> P0* (l0 s) -> P1 s
 \end{code}
 
-We now need to show that |lift sup0 ((mk-mor l0 l1) !! (s , v)) == inst v
+We now need to show that |lift sup0 ((mkmor l0 l1) !! (s , v)) == inst v
 (l s)| (and similarly for |r|):
 
 \begin{code}
-  lift sup0 ((mk-mor l0 l1) !! (s , v))      ==
+  lift sup0 ((mkmor l0 l1) !! (s , v))      ==
   lift sup0 (l0 s , \ i -> v (l1 (l0 s) i))  ==
   lift sup0 (map (C0 *) v (l0 s, l1 (l0 s))  ==
   lift sup0 (map (C0 *) v (l s))             ==
@@ -1101,7 +1123,7 @@ function that, given a definition of a $2$-HIT, produces a definition
 of a \onehit, along with a proof that the interpretations of both
 definitions are equal.
 
-To be able to define $2$-constructors, we need to be able to talk
+To be able to define \twoconstructors, we need to be able to talk
 about paths between paths between points. To be able to do this we
 need the free groupoid operation on relations: given a type |X :
 Type0| and a relation on |R : X -> X -> Type0|, we can define the
@@ -1128,19 +1150,19 @@ path constructors:
   \end{code}
 \item
   \begin{code}
-  refl-unit-l  :   {x y : G}
+  reflunitl    :   {x y : G}
                    (p : FreeGroupoid x y)
                ->  trans' refl p == p
   \end{code}
 \item
   \begin{code}
-  refl-unit-r  :   {x y : G}
+  reflunitr    :   {x y : G}
                    (p : FreeGroupoid x y)
                ->  trans' p refl == p
   \end{code}
 \item
   \begin{code}
-  sym-refl  :   {x y : G}
+  symrefl   :   {x y : G}
                 (p : FreeGroupoid x y)
             ->  sym (sym p) == p
   \end{code}
@@ -1174,16 +1196,16 @@ interpretation function |El : U -> Type0|:
 Along with |El|:
 
 \begin{code}
-  El (sig A B)  = (a : El A) times El (B a)
-  El (pi A B)   = (a : El A) -> El (B a)
-  El `0         = 0
-  El `1         = 1
+  El  (sig A B)  = (a : El A) times El (B a)
+  El  (pi A B)   = (a : El A) -> El (B a)
+  El  `0         = 0
+  El  `1         = 1
 \end{code}
 
 In \hott, we would like this universe to be univalent: any two codes
 |x y : U| should be equal if their interpretations are equal. This can
 be achieved by adding a path constructor, as proposed
-in~\cite{Shulman2014}:
+in~\textcite{Shulman2014}:
 
 \begin{itemize}
 \item |ua : (x y : U) -> El x == El y -> x == y|
@@ -1383,13 +1405,13 @@ definition of |head|.
 
 \section{Correctness of dependent pattern matching}
 
-It has been shown in~\cite{Goguen2006} that dependent pattern matching
+It has been shown in~\textcite{Goguen2006} that dependent pattern matching
 is correct if one assumes \uip: one can translate a definition written
 using dependent pattern matching into one that only makes use of the
 elimination principles of the data types being used, possibly along
 with use of \uip.
 
-In~\cite{Cockx2014}, the authors describe a criterium under which
+In~\textcite{Cockx2014}, the authors describe a criterium under which
 dependent pattern matching is safe, even when one does not assume
 \uip. However, the proof that the criterium is sufficient is rather
 syntactic.
@@ -1442,7 +1464,7 @@ Using |noo| we can now define an inhabitant of |0| as follows:
 
 \begin{researchdir}
   Find out whether the above inconsistency is because Agda does not
-  follow the rules described in~\cite{Goguen2006} closely enough or if
+  follow the rules described in~\textcite{Goguen2006} closely enough or if
   the paper has some implicit hypotheses that are needed for the
   proofs to go through.
 \end{researchdir}
