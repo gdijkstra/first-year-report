@@ -73,6 +73,10 @@
 \newcommand{\Hit}{Higher inductive type\xspace}
 \newcommand{\hits}{higher inductive types\xspace}
 \newcommand{\Hits}{Higher inductive types\xspace}
+\newcommand{\oit}{ordinary inductive type\xspace}
+\newcommand{\Oit}{Ordinary inductive type\xspace}
+\newcommand{\oits}{ordinary inductive types\xspace}
+\newcommand{\Oits}{Ordinary inductive types\xspace}
 \newcommand{\zeroconstructor}{$0$-constructor\xspace}
 \newcommand{\zeroconstructors}{$0$-constructors\xspace}
 \newcommand{\onehit}{$1$-HIT\xspace}
@@ -135,6 +139,9 @@ eventually give an (internal) account of dependent pattern matching
 and hope to give a semantic explanation of the concept using the
 language of \hott.
 
+The report is concluded in \cref{cha:phd-outline}, which gives
+summarises the research directions.
+
 \chapter{Homotopy type theory}
 \label{ch:homotopy-type-theory}
 
@@ -157,11 +164,11 @@ argument implicit. The type |Eq| comes equipped with an elimination
 principle, often called the |J| rule:
 
 \begin{code}
-  J :   (A : Type0)
-    ->  (P : (x y : A) -> (p : Id A x y) -> Type0)
-    -> (c : (x : A) -> P x x refl)
-    -> (x y : A) -> (p : Id A x y)
-    -> P x y p
+  J  :   (A : Type0)
+     ->  (P : (x y : A) -> (p : Id A x y) -> Type0)
+     ->  (c : (x : A) -> P x x refl)
+     ->  (x y : A) -> (p : Id A x y)
+     ->  P x y p
 \end{code}
 
 with computation rule:
@@ -211,10 +218,11 @@ observation leads us to the following correspondence:
 
 Other important properties of propositional equality is that every
 function defined in type theory respects these equalities\footnote{The
-  name |ap| stands for ``action paths'': one can consider functions to
-  be functors, as provide a mapping between points and a mapping
-  between morphisms, namely the paths, which respects the identity
-  path and path composition.} :
+  name |ap| stands for ``action (of |f|) on paths'': one can consider
+  functions to be functors, as provide a mapping between points and a
+  mapping between morphisms, namely the paths, which respects the
+  identity path and path composition. |ap| can also be interpreted as
+  the ``application (of |f|) to paths''}:
 
 \begin{code}
   ap : {A B : Type0} -> (f : A -> B) -> {x y : A} -> x == y -> f x == f y
@@ -239,7 +247,7 @@ x y p u == v| is |u == v [B down p]|. We can now define the dependent
 version of |ap|:
 
 \begin{code}
-  apd  :   {A : Universe} {B : A -> Universe} {x y : A} 
+  apd  :   {A : Type0} {B : A -> Type0} {x y : A} 
        ->  (f : (a : A) -> B a) -> (p : x == y)
        ->  f x == f y [B down p]
 \end{code}
@@ -255,13 +263,31 @@ with nested $\Sigma$-types.
 \Hott teaches us that we can regard types as topological spaces up to
 homotopy. This leads us to the question of how we can represent
 familiar spaces such as the circle and the torus in a type theoretic
-way. So far several examples of what \hits may look like have been
-explored, but a formal scheme of the general syntax of \hit
-definitions has not been devised as of yet. In this chapter we will
-explore ways to formalise (restricted) notions of higher inductive
-types.
+way. To be able to describe such types, \hits have been proposed. So
+far examples of what these may be have been successfully used to do
+homotopy theory \parencite{UFP2013}. However, the applications of
+\hits are not limited to homotopy theory: instances have also been
+used to model set theory \parencite{Rijke2013} and also to model
+versioning systems \parencite{Angiuli2014}.
+
+Even though there is some intuition on what constitutes a \hit and
+what its semantics ought to be \parencite{Lumsdaine2013}, a formal
+scheme of the general syntax of \hit definitions has not been devised
+as of yet. The aim of this chapter is to work towards such a general
+syntax by finding a universal construction for \hits akin to how
+W-types describe \oits. We start of in \cref{sec:examples} by giving
+some examples of \hits. \Cref{sec:containers} explains containers and
+their initial algebras (W-types) as a means of describing \oits. It
+also explains some of the machinery we need for
+\cref{sec:construction-onehits} in which we give a construction of
+\onehits. In \cref{sec:construction-2-hits} we explore the idea of
+constructing \twohits and discuss some of the tools we need for
+that. The chapter is concluded by \cref{sec:high-induct-recurs}, where
+we propose an extension of \onehits to \emph{inductive-recursive
+  \onehits}, along with an application of this idea.
 
 \section{Examples}
+\label{sec:examples}
 
 \subsection{Circle}
 
@@ -282,8 +308,8 @@ our codomain and ensure that this point also has a corresponding loop:
   Circleelim : (Z : Type0) (zb : Z) (zloop : zb == zb) -> Circle -> Z
 \end{code}
 
-As with ordinary inductive types, the elimination principle should
-also satisfy certain computation rules:
+As with \oits, the elimination principle should also satisfy certain
+computation rules:
 
 \begin{code}
   Circleelimcomppoint  : (Z : Type0) (zb : Z) (zloop : zb == zb)
@@ -434,16 +460,17 @@ that we at most need \oneconstructors to describe our \hits.
 
 
 \section{Containers}
+\label{sec:containers}
 
 Before we can start formalising a notion of \hits, we need a better
-grip on what ordinary inductive types are. One way to look at
-inductive types is as initial algebras of strictly positive
-functors. For example, the list data type can be seen as the initial
-algebra of the functor (having fixed some |A : Type0|) |ListFA X = 1 +
-A times X|. An algebra for this functor is a type |Z : Type0| along
-with a function |ListF Z -> Z|. An initial algebra |List : Type0| with
-|sup : ListF List -> List| then satisfies the following universal
-property for any algebra |theta : ListF Z -> Z| with |Z : Type0|:
+grip on what \oits are. One way to look at inductive types is as
+initial algebras of strictly positive functors. For example, the list
+data type can be seen as the initial algebra of the functor (having
+fixed some |A : Type0|) |ListFA X = 1 + A times X|. An algebra for
+this functor is a type |Z : Type0| along with a function |ListF Z ->
+Z|. An initial algebra |List : Type0| with |sup : ListF List -> List|
+then satisfies the following universal property for any algebra |theta
+: ListF Z -> Z| with |Z : Type0|:
 
 \begin{center}
   \begin{tikzpicture}[description/.style={fill=white,inner sep=2pt}]
@@ -818,6 +845,7 @@ which satisfies the property that for every value |x : W C| and
 instantation |v : X -> W C|, we have |inst v (gen x) == x|.
 
 \section{Construction of \onehits}
+\label{sec:construction-onehits}
 
 We want to extend the concept of container to also be able to describe
 the data needed for the \emph{path} constructors:
@@ -875,7 +903,7 @@ applied to a canonical \emph{path}. Just as the above refers to the
 algebra |theta| on points, we expect the path computation rule to
 refer to the ``algebra'' on paths. Both |sup1| as well as |rho| expect a
 substitution, but |rho| expects a substitution into |Z| instead of
-|H|, but any |v : X -> H| induces a |v' : X -> Z| by postcomposition
+|H|, but any |v : X -> H| induces a |v' : X -> Z| by post-composition
 with |elim Z theta rho|. Using this, a somewhat sensible candidate for
 the path computation rule is;
 
@@ -980,7 +1008,7 @@ We now need to show that |lift sup0 ((mkmor l0 l1) !! (s , v)) == inst v
 (l s)| (and similarly for |r|):
 
 \begin{code}
-  lift sup0 ((mkmor l0 l1) !! (s , v))      ==
+  lift sup0 ((mkmor l0 l1) !! (s , v))       ==
   lift sup0 (l0 s , \ i -> v (l1 (l0 s) i))  ==
   lift sup0 (map (C0 *) v (l0 s, l1 (l0 s))  ==
   lift sup0 (map (C0 *) v (l s))             ==
@@ -1086,6 +1114,7 @@ shown to hold by induction on |Free C H|.
 \end{researchdir}
 
 \subsection{Limitations of the construction}
+\label{sec:limit-constr}
 
 With ordinary strictly positive types, we can define types such as
 rose trees: given a type |A : Type0|, we have:
@@ -1111,7 +1140,8 @@ Type0| such that for every |X : Type0| we have |((s : S) times P s -> X)
   types such as the above example.
 \end{researchdir}
 
-\section{Constructing $2$-HITs}
+\section{Construction of $2$-HITs}
+\label{sec:construction-2-hits}
 
 In theory having only \onehits should be enough, since we have some
 sort of way to translate any higher definition to the lower one: the
@@ -1180,6 +1210,7 @@ path constructors:
 \end{researchdir}
 
 \section{Higher inductive-recursive types}
+\label{sec:high-induct-recurs}
 
 When implementing type theory in type theory, a common way to describe
 the universe of types, is by an inductive-recursive definition. One
@@ -1221,22 +1252,9 @@ achieved by adding the following coherency condition:
 \end{itemize}
 
 \begin{researchdir}
-  Find and formalise a notion of inductive-recursive \onehits.
+  Find and formalise a notion of $1$-higher inductive-recursive types.
 \end{researchdir}
 
-\section{Pattern matching on \hits}
-
-The ultimate goal of the above is to eventually be able to give a form
-of pattern matching on \hits. Just as with ordinary inductive types,
-it is painful to write definitions ``by hand'' using only the
-elimination principles. This becomes very apparent when defining
-functions that require recursion or discriminate on multiple
-arguments.
-
-\begin{researchdir}
-  Find examples of functions on specific \hits and try to find forms
-  of pattern matching that would make these definitions more elegant.
-\end{researchdir}
 
 
 \chapter{Dependent pattern matching}
@@ -1351,7 +1369,8 @@ An inhabitant of |Id A x y| constitutes a proof that the terms |x| and
 |y| are equal. Note that |refl : Id A x y| only type checks if |x| and
 |y| are definitionally equal. To increase readability, we will
 sometimes denote |Id A x y| by |x == y|, leaving the type argument
-implicit.
+implicit. For \emph{definitional} equality between two terms |x| and
+|y|, we use the notation |x = y|.
 
 Given this definition of equality, it might lead one to think that if
 we have a proof |p : Id A x y|, it is necessarily unique. In fact,
@@ -1468,6 +1487,46 @@ Using |noo| we can now define an inhabitant of |0| as follows:
   the paper has some implicit hypotheses that are needed for the
   proofs to go through.
 \end{researchdir}
+
+\chapter{PhD plan}
+\label{cha:phd-outline}
+
+My current goal is to finish up the first attempt at finding a
+universal construction for \onehits, specifically finishing up and
+properly documenting the Agda formalisation. Apart from this, there
+are some ways the construction can be extended. One limitation of the
+current approach has been discussed in \cref{sec:limit-constr}. We
+should look into why these type of examples cannot be expressed and
+look for possible fixes to the universal construction to make this
+possible. Other extensions that have been discussed are extending the
+constructon to \twohits (\cref{sec:construction-2-hits}), indexed
+\onehits (\cref{sec:construction-2-hits}) and $1$-higher
+inductive-recursive types (\cref{sec:high-induct-recurs}).
+
+Besides describing \hits, I also want to look into pattern matching in
+the context of \hott. One interesting research direction in this
+context is pattern matching on \hits. We currently have to write our
+definitions on \hits using their elimination principles, which of
+course suffers from the same problems as in the case of
+\oits. Especially when writing binary functions on a \hit, showing
+that the given algebra on points respects the path constructors can
+quickly become very involved. We would like some form of pattern
+matching to describe the computation rules for the path constructors,
+similar to pattern matching on point constructors.
+
+Another interesting topic is to give an explanation of pattern
+matching, in particular \emph{dependent} pattern matching in terms of
+\hott. It has been shown \parencite{Goguen2006} that dependent pattern
+matching definitions can be translated to definitions that only make
+use of the appropriate elimination principles. The problem with this
+translation is that it relies on \uip to hold, which makes it
+unsuitable for \hott. \textcite{Cockx2014} give conditions under which
+the translation does not need \uip. As these approaches are very
+syntactic, it would be nice to give a more semantic account of
+dependent pattern matching in \hott terms. Instead of a external
+translation procedure, it would be nice to have an internal account of
+dependent pattern matching which perhaps could be achieved using
+generic programming techniques.
 
 \printbibliography
 
