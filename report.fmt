@@ -1,5 +1,6 @@
 %include polycode.fmt
 
+%format -			= "\mbox{-}"
 %format *			= " ^{*} " 
 %format .			= " \mbox{ }. " 
 %format Empty			= " \bot " 
@@ -8,6 +9,7 @@
 %format Natelim			= " \mathbb{N}\mbox{-}\Conid{elim} " 
 %format lhd			= " \lhd " 
 %format Sig			= " \Sigma " 
+%format Pi			= " \Pi " 
 %format	sem(a)			= " \llbracket  "  a  "  \rrbracket " 
 %format specialCase		= " \llbracket C ^{*} \rrbracket "
 %format WC			= " W_{C} " 
@@ -25,8 +27,10 @@
 %format sup0			= " sup_{0} " 
 %format sup1			= " sup_{1} " 
 %format S0			= " S_{0} " 
+%format s0			= " s_{0} " 
 %format P0			= " P_{0} " 
 %format S1			= " S_{1} " 
+%format s1			= " s_{1} " 
 %format P1			= " P_{1} " 
 %format S'			= " S^{*} " 
 %format P'			= " P^{*} " 

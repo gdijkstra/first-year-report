@@ -66,6 +66,7 @@
 \newcommand{\todoi}[1]{\todo[inline]{#1}}
 \newcommand{\withoutk}{\xspace\verb+--without-K+\xspace}
 \newcommand{\uip}{uniqueness of identity proofs\xspace}
+\newcommand{\Uip}{Uniqueness of identity proofs\xspace}
 \newcommand{\hott}{homotopy type theory\xspace}
 \newcommand{\Hott}{Homotopy type theory\xspace}
 \newcommand{\mltt}{Martin-L\"of's type theory\xspace}
@@ -139,8 +140,9 @@ eventually give an (internal) account of dependent pattern matching
 and hope to give a semantic explanation of the concept using the
 language of \hott.
 
-The report is concluded in \cref{cha:phd-outline}, which gives
-summarises the research directions.
+The report is concluded in \cref{cha:phd-outline}, which gives a
+tentative outline of my PhD thesis and a planning of next academic
+year.
 
 \chapter{Homotopy type theory}
 \label{ch:homotopy-type-theory}
@@ -188,19 +190,21 @@ Type0|:
 \item |trans' : x == y -> y == z -> x == z| for any |x y z : X|
 \end{itemize}
 
-One can also show that these operations give us a groupoid:
-transitivity is associative, symmetry acts as an inverse operation and
-reflexivity is the unit for transitivity. However, the groupoid laws
-of propositional equalities on some type |X : Type0| hold only up to
-propositional equality, and so on: we do not really get a groupoid,
-but an $\omega$-groupoid. These $\omega$-groupoids also occur in
-homotopy theory: two points in a space may be connected by a path,
-paths may be inverted, composed and there is always a constant path
-from a point to itself. One can consider ``paths'' between paths,
-namely homotopies, which continuous deformations transforming one path
-into the other. One can show that the operations on paths follow the
-same laws as |refl|, |sym| and |trans'| do, up to homotopy. This
-observation leads us to the following correspondence:
+\newpage
+
+One can also show that the equivalence class operations give us a
+groupoid: transitivity is associative, symmetry acts as an inverse
+operation and reflexivity is the unit for transitivity. However, the
+groupoid laws of propositional equalities on some type |X : Type0|
+hold only up to propositional equality, and so on: we do not really
+get a groupoid, but an $\omega$-groupoid. These $\omega$-groupoids
+also occur in homotopy theory: two points in a space may be connected
+by a path, paths may be inverted, composed and there is always a
+constant path from a point to itself. One can consider ``paths''
+between paths, namely homotopies, which continuous deformations
+transforming one path into the other. One can show that the operations
+on paths follow the same laws as |refl|, |sym| and |trans'| do, up to
+homotopy. This observation leads us to the following correspondence:
 
 \begin{center}%
 \begin{tabular}{||l||l||}%
@@ -253,9 +257,11 @@ version of |ap|:
 \end{code}
 
 As we have already seen, we are following Agda's notation for
-$\Pi$-types. For $\Sigma$-types we will use the notation |(a : A)
-times B a| for |Sig A (\a -> B a)| to improve readability when dealing
-with nested $\Sigma$-types.
+$\Pi$-types, \ie |(a : A) -> B a| denotes |Pi A (\a -> B a)|. For
+$\Sigma$-types we will use the notation |(a : A) times B a| for |Sig A
+(\a -> B a)| to improve readability when dealing with nested
+$\Sigma$-types. A function out of the empty type is denoted by
+|exfalso : {A : Type0} -> 0 -> A|.
 
 \chapter{Higher inductive types}
 \label{ch:hit}
@@ -285,6 +291,8 @@ constructing \twohits and discuss some of the tools we need for
 that. The chapter is concluded by \cref{sec:high-induct-recurs}, where
 we propose an extension of \onehits to \emph{inductive-recursive
   \onehits}, along with an application of this idea.
+
+\newpage
 
 \section{Examples}
 \label{sec:examples}
@@ -338,6 +346,8 @@ which is as one would expect:
 
 The computation rule for points is the same and the rule for paths is
 almost the same: we only have to replace |ap| with |apd|.
+
+\newpage
 
 \subsection{Propositional truncation}
 
@@ -527,6 +537,8 @@ to use things such as de Bruijn indices. More importantly, one has the
 problem that there are multiple representations of the same type, \eg
 the unit type can be described as |`1| or |`1 `+ `0|, etc.
 
+\newpage
+
 Another way to more succinctly formalise the notion of strictly
 positive functors is as \emph{containers} \parencite{Abbott2005}: a
 container is a pair |S : Type0|, the type of \emph{shapes}, and |P : S
@@ -590,6 +602,8 @@ If we unfold the definition of |sem(C)| we get the following:
 \end{itemize}
 
 which is the \emph{W-type} construction from~\textcite{MartinLof1984}.
+
+\newpage
 
 Using this we can define the natural numbers as the initial algebra of
 the following container:
@@ -713,15 +727,16 @@ The above definition does not immediately look like it is structurally
 recursive, but if we inline the definition of |map|, it does becomes
 the case.
 
-Defining |return| and |join| is of course not enough: one needs to show
-that these follow the monad laws. Before we can define the monad laws,
-we need to show that |Free C| is a functor for every |C :
+Defining |return| and |join| is of course not enough: one needs to
+show that these follow the monad laws. Before we can define the monad
+laws, we need to show that |Free C| is a functor for every |C :
 Cont|. Instead of defining a new |map| function for this data type and
 showing that it satisfies the functor laws, we can instead create a
-container out of this. We know that |sem(S lhd P) 1 = (s : S) times
-P s -> 1 == S|. Using this fact, given a container |S lhd P|, we can
-produce a new container, where |P*| is defined by structural
-recursion:
+container out of this. From the extension of a container we can
+retrieve the shapes by plugging in the unit type: |sem(S lhd P) 1 = (s
+: S) times P s -> 1 == S|. Using this fact, given a container |S lhd
+P|, we can produce a new container, where |P*| is defined by
+structural recursion:
 
 \begin{code}
     S' : Type0
@@ -788,6 +803,8 @@ following must commute:
   \path[->] (m-2-1) edge[decorate] node[auto]       {|theta|} (m-2-3);
   \end{tikzpicture}
 \end{center}
+
+\newpage
 
 The algebra |theta| must also respect the |return| operation, \ie the
 following commutes:
@@ -861,6 +878,8 @@ the data needed for the \emph{path} constructors:
   from |P1 s|.
 \end{itemize}
 
+\newpage
+
 The point and path constructors are then as follows, if we call the
 type we are defining |H|:
 
@@ -921,6 +940,8 @@ This problem can be solved, but with this presentation it is difficult
 to see what is actually going ``wrong'' with the types, hence the
 discussion of this is postponed until \cref{sec:altern-constr}.
 
+\newpage
+
 \subsection{Examples}
 
 \subsubsection{Circle}
@@ -980,6 +1001,8 @@ Paolo Capriotti, is as follows:
   describing the result types of the path constructors.
 \end{itemize}
 
+\newpage
+
 The constructors of the type |H| that we are defining, are:
 
 \begin{itemize}
@@ -1036,8 +1059,11 @@ Of course, we still have the problem of defining our path computation rule as:
   ap (elim Z theta rho) (sup1 m) == rho (map C0 (elim Z theta rho) m)
 \end{code}
 
-However, with this representation it becomes a bit clearer what
-diagrams have to commute in order for this to work. We have:
+\newpage
+
+With this representation, as opposed to the previous approach, it
+becomes a bit clearer what diagrams have to commute in order for this
+to work. We have:
 
 \begin{code}
   ap (elim Z theta rho) (sup1 m) : 
@@ -1215,11 +1241,11 @@ path constructors:
 When implementing type theory in type theory, a common way to describe
 the universe of types, is by an inductive-recursive definition. One
 defines a data type of codes of types |U : Type0| together with the
-interpretation function |El : U -> Type0|:
+interpretation function |El : U -> Type0|, \eg:
 
 \begin{itemize}
-\item |sig : (A : U) -> (El a -> U) -> U|
-\item |pi : (A : U) -> (El a -> U) -> U|
+\item |sig  : (A : U) -> (El A -> U) -> U|
+\item |pi   : (A : U) -> (El A -> U) -> U|
 \item |`0 : U|
 \item |`1 : U|
 \end{itemize}
@@ -1242,14 +1268,17 @@ in~\textcite{Shulman2014}:
 \item |ua : (x y : U) -> El x == El y -> x == y|
 \end{itemize}
 
-However, adding this on its own is not enough. |U| now has too many
-equalities, \eg |ua `1 `1 refl| is not provably equal to |refl : `1 ==
-`1|; we want |El x == El y| to be equivalent to |x == y|. This can be
-achieved by adding the following coherency condition:
+Since |El| is now a function out of a \hit, we also have to specify
+what |ap| does on on |ua|, so for any |x y : U| and |p : El x == El
+y|, we define:
 
 \begin{itemize}
-\item |coh : (x y : U) (p : El x == El y) -> ap El (ua x y p) == p|
+\item |ap El (ua x y p) == p|
 \end{itemize}
+
+Using this we can show that for any |x y : U|, we have an equivalence
+between |El x == El y| and |x == y|, so if |Type0| is univalent, then
+so is |U|.
 
 \begin{researchdir}
   Find and formalise a notion of $1$-higher inductive-recursive types.
@@ -1356,7 +1385,9 @@ possible well-typed pattern other than |S n| for that argument. The
 definition is also complete: the |nil| case is impossible as we have
 previously mentioned.
 
-\section{Uniqueness of identity proofs}
+\newpage
+
+\section{\Uip}
 
 One important example of an indexed family is the identity type:
 
@@ -1383,9 +1414,9 @@ using dependent pattern matching, we can easily prove this:
 
 Proving this using only the elimination principle of identity types
 turns out to be impossible: one can construct models of \mltt with
-identity types in which the uniquenes of identity proofs property does
-not hold for every type. In \hott, we are specifically interested in
-the models that violate this principle, hence dependent pattern
+identity types in which the \uip property does not hold for every
+type \parencite{Hofmann1998}. In \hott, we are specifically interested
+in the models that violate this principle, hence dependent pattern
 matching in its unrestricted form is incompatible with \hott. We hope
 to uncover what the root of this incompatibility is and whether we can
 find a variation of dependent pattern matching that is not at odds
@@ -1393,7 +1424,7 @@ with \hott.
 
 \section{Parametrising inductive families}
 
-To get a better understanding of indexed familes and dependent pattern
+To get a better understanding of indexed families and dependent pattern
 matching, we will translate some definitions to a non-indexed,
 parametrised family, using identity types. With identity types, one
 can factor out the ``indexedness'' of a family and make it more
@@ -1407,6 +1438,8 @@ For example, we can translate the vector type as follows:
     nil   : n == 0 -> Vec A n
     cons  : A -> (m : Nat) -> Vec A m -> n == S m -> Vec A n
 \end{code}
+
+\newpage
 
 If we now try to define |head| by pattern matching on |Vec' A (S n)|,
 we get the following:
@@ -1446,6 +1479,8 @@ syntactic.
   Internalising this might also help giving insight in what happens
   semantically.
 \end{researchdir}
+
+\newpage
 
 \section{Other inconsistencies with dependent pattern matching}
 
@@ -1488,45 +1523,65 @@ Using |noo| we can now define an inhabitant of |0| as follows:
   proofs to go through.
 \end{researchdir}
 
-\chapter{PhD plan}
+\chapter{PhD outline}
 \label{cha:phd-outline}
 
-My current goal is to finish up the first attempt at finding a
-universal construction for \onehits, specifically finishing up and
-properly documenting the Agda formalisation. Apart from this, there
-are some ways the construction can be extended. One limitation of the
-current approach has been discussed in \cref{sec:limit-constr}. We
-should look into why these type of examples cannot be expressed and
-look for possible fixes to the universal construction to make this
-possible. Other extensions that have been discussed are extending the
-constructon to \twohits (\cref{sec:construction-2-hits}), indexed
-\onehits (\cref{sec:construction-2-hits}) and $1$-higher
-inductive-recursive types (\cref{sec:high-induct-recurs}).
+In this chapter I will give a tentative outline of my PhD thesis along
+with a tentative planning of the next academic year.
 
-Besides describing \hits, I also want to look into pattern matching in
-the context of \hott. One interesting research direction in this
-context is pattern matching on \hits. We currently have to write our
-definitions on \hits using their elimination principles, which of
-course suffers from the same problems as in the case of
-\oits. Especially when writing binary functions on a \hit, showing
-that the given algebra on points respects the path constructors can
-quickly become very involved. We would like some form of pattern
-matching to describe the computation rules for the path constructors,
-similar to pattern matching on point constructors.
+\begin{itemize}
+\item \Hits
+  \begin{itemize}
+  \item Examples of \hits
+  \item Universal \onehit
+    \begin{itemize}
+    \item First approach
+    \item Limitations of first approach
+    \item Overcoming the limitations
+    \end{itemize}
+  \item Universal \twohit
+    \begin{itemize}
+    \item Formalising the hub-spokes construction
+    \end{itemize}
+  \item Indexed \onehits
+  \item Inductive-recursive \onehits
+  \end{itemize}
+\item Dependent pattern matching
+  \begin{itemize}
+  \item Examples of dependent pattern matching
+  \item Issues with dependent pattern matching
+  \item Internalising dependent pattern matching
+  \item Pattern matching on \hits
+  \end{itemize}
+\end{itemize}
 
-Another interesting topic is to give an explanation of pattern
-matching, in particular \emph{dependent} pattern matching in terms of
-\hott. It has been shown \parencite{Goguen2006} that dependent pattern
-matching definitions can be translated to definitions that only make
-use of the appropriate elimination principles. The problem with this
-translation is that it relies on \uip to hold, which makes it
-unsuitable for \hott. \textcite{Cockx2014} give conditions under which
-the translation does not need \uip. As these approaches are very
-syntactic, it would be nice to give a more semantic account of
-dependent pattern matching in \hott terms. Instead of a external
-translation procedure, it would be nice to have an internal account of
-dependent pattern matching which perhaps could be achieved using
-generic programming techniques.
+\newpage
+
+\section{Planning}
+
+\begin{itemize}
+\item 2014
+  \begin{itemize}
+  \item \textbf{June--November:}
+    \begin{itemize}
+    \item Finish up and properly documenting the Agda formalisation
+      of the current approach to a universal \onehit.
+    \item Start working out a similar approach to a universal \twohit.
+    \item Formalise the hub-spokes construction from \twohits to
+      \onehits.
+    \item Look at limitations of current approach to a universal
+      \onehit.
+    \item Look at formalising indexed \onehits.
+    \item Look at formalising inductive-recursive \onehits.
+    \end{itemize}
+  \item \textbf{December:} internalising dependent pattern matching
+  \end{itemize}
+\item 2015
+  \begin{itemize}
+  \item \textbf{January--March:} internalising dependent pattern matching
+  \item \textbf{April--July:} (dependent) pattern matching on \hits
+  \end{itemize}
+\end{itemize}
 
 \printbibliography
 
