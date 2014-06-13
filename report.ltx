@@ -141,8 +141,8 @@ and hope to give a semantic explanation of the concept using the
 language of \hott.
 
 The report is concluded in \cref{cha:phd-outline}, which gives a
-tentative outline of my PhD thesis and a planning of next academic
-year.
+summary of the research directions along with a tentative outline of
+my PhD thesis and a planning of next academic year.
 
 \chapter{Homotopy type theory}
 \label{ch:homotopy-type-theory}
@@ -1523,11 +1523,47 @@ Using |noo| we can now define an inhabitant of |0| as follows:
   proofs to go through.
 \end{researchdir}
 
-\chapter{PhD outline}
+\chapter{PhD plan}
 \label{cha:phd-outline}
 
-In this chapter I will give a tentative outline of my PhD thesis along
-with a tentative planning of the next academic year.
+My current goal is to finish up the first attempt at finding a
+universal construction for \onehits, specifically finishing up and
+properly documenting the Agda formalisation. Apart from this, there
+are some ways the construction can be extended. One limitation of the
+current approach has been discussed in \cref{sec:limit-constr}. We
+should look into why these type of examples cannot be expressed and
+look for possible fixes to the universal construction to make this
+possible. Other extensions that have been discussed are extending the
+constructon to \twohits (\cref{sec:construction-2-hits}), indexed
+\onehits (\cref{sec:construction-2-hits}) and $1$-higher
+inductive-recursive types (\cref{sec:high-induct-recurs}).
+
+Besides describing \hits, I also want to look into pattern matching in
+the context of \hott. One interesting research direction in this
+context is pattern matching on \hits. We currently have to write our
+definitions on \hits using their elimination principles, which of
+course suffers from the same problems as in the case of
+\oits. Especially when writing binary functions on a \hit, showing
+that the given algebra on points respects the path constructors can
+quickly become very involved. We would like some form of pattern
+matching to describe the computation rules for the path constructors,
+similar to pattern matching on point constructors.
+
+Another interesting topic is to give an explanation of pattern
+matching, in particular \emph{dependent} pattern matching in terms of
+\hott. It has been shown \parencite{Goguen2006} that dependent pattern
+matching definitions can be translated to definitions that only make
+use of the appropriate elimination principles. The problem with this
+translation is that it relies on \uip to hold, which makes it
+unsuitable for \hott. \textcite{Cockx2014} give conditions under which
+the translation does not need \uip. As these approaches are very
+syntactic, it would be nice to give a more semantic account of
+dependent pattern matching in \hott terms. Instead of a external
+translation procedure, it would be nice to have an internal account of
+dependent pattern matching which perhaps could be achieved using
+generic programming techniques.
+
+\section{Outline}
 
 \begin{itemize}
 \item \Hits
@@ -1554,8 +1590,6 @@ with a tentative planning of the next academic year.
   \item Pattern matching on \hits
   \end{itemize}
 \end{itemize}
-
-\newpage
 
 \section{Planning}
 
