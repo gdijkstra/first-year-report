@@ -669,8 +669,9 @@ types can be defined as follows:
   applymor (mkmor f g) X (s , u) := (f s , \i -> u (g (f s) i))
 \end{code}
 
-We will use the notation |m !! x| (where |m : Mor C0 C1| and |x :
-sem(C0) X|, for some |X : Type0| and |C0 => C1| for |Mor C0 C1|.
+We will use the notation |m !! x : sem(C1) X| where |m : Mor C0 C1|
+and |x : sem(C0) X|, for some |X : Type0|, and the notation |C0 => C1|
+for |Mor C0 C1|.
 
 It so happens that container morphisms are in fact natural
 transformations. Given |C0 C1 : Container| and |X Y : Type0|, the
@@ -1031,10 +1032,10 @@ We now need to show that |lift sup0 ((mkmor l0 l1) !! (s , v)) == inst v
 (l s)| (and similarly for |r|):
 
 \begin{code}
-  lift sup0 ((mkmor l0 l1) !! (s , v))       ==
-  lift sup0 (l0 s , \ i -> v (l1 (l0 s) i))  ==
-  lift sup0 (map (C0 *) v (l0 s, l1 (l0 s))  ==
-  lift sup0 (map (C0 *) v (l s))             ==
+  lift sup0 ((mkmor l0 l1) !! (s , v))        ==
+  lift sup0 (l0 s , \ i -> v (l1 (l0 s) i))   ==
+  lift sup0 (map (C0 *) v (l0 s, l1 (l0 s)))  ==
+  lift sup0 (map (C0 *) v (l s))              ==
   inst v (l s)
 \end{code}
 
@@ -1620,4 +1621,3 @@ generic programming techniques.
 \printbibliography
 
 \end{document}
-
