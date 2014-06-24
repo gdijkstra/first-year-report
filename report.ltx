@@ -593,8 +593,8 @@ If we unfold the definition of |sem(C)| we get the following:
 \begin{itemize}
 \item Term introduction: |sup : (s : S) times (P s -> WC) -> WC|
 
-\item Elimination principle: |elim : {Z : Type0} (theta : s : S times
-  (P s -> Z) -> WC -> Z|
+\item Elimination principle: |elim : {Z : Type0} (theta : (s : S) times
+  (P s -> Z) -> Z) -> WC -> Z|
 
 \item Computation rule: for every |s : S|, |u : P s -> WC| and algebra
   |theta : (s : S) times (P s -> Z) -> Z| we get |elim theta (sup (s,
